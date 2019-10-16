@@ -19,8 +19,9 @@ class CleanupWorld(gym.Env):
         self.goal_map = np.zeros([8,8],dtype='uint8')
         images= ['bg.png','sprite_up.png','sprite_left.png','sprite_down.png','sprite_right.png', 'obj0.png', 'obj1.png', 'obj2.png', 'obj3.png']
         self.keys = ['bg','up','left','down','right','cookie','choco','sushi','apple']
-        print(os.getcwd())
-        self.image_list = {key:cv2.imread('./2D_clean_up/cleanup_world/envs/images/'+img) for img,key in zip(images,self.keys)}
+        pwd = os.getcwd()
+        print(pwd)
+        self.image_list = {key:cv2.imread(pwd+'/2D_cleanup/cleanup_world/envs/images/'+img) for img,key in zip(images,self.keys)}
         self.done = True
         self.agent_location = None
         self.agent_direction = None
