@@ -1,62 +1,48 @@
 import numpy as np
 import cv2
-from matplotlib import pyplot as plt
+# from matplotlib import pyplot as plt
 import random
 
-import gym
-from gym import error, spaces, utils
-from gym.utils import seeding
-from gym.spaces import Dict, Box, Discrete
 
-class CleanupWorld(gym.Env):
+class CleanupWorld:
 
     def __init__(self, max_time_steps=100):
 
-        self.action_space_str = ['forward', 'left', 'right', 'pick']
+        self.action_space = ['forward', 'left', 'right', 'pick']
         self.directions = {'up':0,'left':1,'down':2,'right':3}
         self.done = False
         self.map = np.zeros([8,8],dtype='uint8')
         self.goal_map = np.zeros([8,8],dtype='uint8')
         images= ['bg.png','sprite_up.png','sprite_left.png','sprite_down.png','sprite_right.png', 'obj0.png', 'obj1.png', 'obj2.png', 'obj3.png']
         self.keys = ['bg','up','left','down','right','cookie','choco','sushi','apple']
-        self.image_list = {key:cv2.imread('./cleanup_world/envs/images/'+img) for img,key in zip(images,self.keys)}
+        self.image_list = {key:cv2.imread('./images/'+img) for img,key in zip(images,self.keys)}
         self.done = True
         self.agent_location = None
         self.agent_direction = None
         self.purse = None
         self.TIME_LIMIT = max_time_steps
         self.t = 0
-        self.image_shape = 256
-        self.observation_space = Box(high=255 * np.ones([256, 256, 3]), low=np.zeros([256, 256, 3]), dtype='uint8')
-        # self.observation_space = Dict(
-        #     {'goal': Box(high=255 * np.ones([256, 256, 3]), low=np.zeros([256, 256, 3]), dtype='uint8'),
-        #      'observed': Box(high=255 * np.ones([256, 256, 3]), low=np.zeros([256, 256, 3]), dtype='uint8')})
-        self.action_space = Discrete(4)
-        self._seed()
 
-    def _seed(self, seed=None):
-        # print('set_seed', seed)
-        self.np_random, seed = seeding.np_random(seed)
-        return [seed]
 
     def reset(self):
-        self.agent_location = [0, 0]
+        self.agent_location = [0,0]
         self.agent_direction = 'up'
-        positions = list(self.np_random.permutation(self.map.shape[0] * self.map.shape[1]))
+        positions = list(np.random.permutation(self.map.shape[0]*self.map.shape[1]))
 
-        for i in range(5, 9):
+        for i in range(5,9):
             position = positions.pop()
-            self.map[int(position / self.map.shape[0]), position % self.map.shape[1]] = i
-        for i in range(5, 9):
+            self.map[int(position/self.map.shape[0]), position%self.map.shape[1]] = i
+        for i in range(5,9):
             position = positions.pop()
-            self.goal_map[int(position / self.map.shape[0]), position % self.map.shape[1]] = i
+            self.goal_map[int(position/self.map.shape[0]), position%self.map.shape[1]] = i
         # self.map[3,3] = 5 #cookie
         # self.map[7,2] = 6 #choco
         # self.map[1,1] = 7 #sushi
         # self.map[5,5] = 8 #apple
-        self.map[self.agent_location[0], self.agent_location[1]] = self.directions[self.agent_direction] + 1
+        self.map[self.agent_location[0], self.agent_location[1]] = self.directions[self.agent_direction]+1
         self.purse = None
         self.done = False
+
         return self.get_obs()
 
     def render(self, mode='human'):
@@ -73,14 +59,17 @@ class CleanupWorld(gym.Env):
                 # print('here')
                 # print(self.image_list)
                 image_goal[i*32:(i+1)*32,j*32:(j+1)*32,:] = self.image_list[self.keys[self.goal_map[i,j]]]
+        # else:
+        #     map_image = np.zeros_like(self.map['occupancy'], dtype='uint8')
+        #     for i in range(len(layers)):
+        #         map_image += (i + 1) * self.map[layers[i]].astype('uint8')
+        # plt.matshow(np.flip(image, 1).T)
 
         if mode == 'human':
-            # cv2.imshow('win',np.concatenate([image,image_goal], axis=1))
-            cv2.imshow('win', image)
+            cv2.imshow('win',np.concatenate([image,image_goal], axis=1))
             # cv2.waitKey(1)
         elif mode == 'rgb_array':
-            return image
-            # return {'goal':image_goal, 'observed':image}
+            return {'goal':image_goal, 'observed':image}
 
     def get_neighbors(self, x, y,see_objects=True):
         up = x-1, y
@@ -110,8 +99,6 @@ class CleanupWorld(gym.Env):
         return np.sum(diff.astype('uint8'))
 
     def step(self, action):
-
-        action = self.action_space_str[action]
         self.t += 1
         assert self.done == False  # reset the world
         if action == 'left':
@@ -153,27 +140,27 @@ class CleanupWorld(gym.Env):
             self.done = True
         elif self.t == self.TIME_LIMIT:
             self.done = True
-        return obs, rew, self.done, {}
+        return obs, rew, self.done
 
     def get_obs(self):
         return self.render(mode='rgb_array')
 
-# if __name__ == '__main__':
-#      env = CleanupWorld()
-#      obs = env.reset()
-#      # obs, rew, done = env.step('right')
-#      # obs, rew, done = env.step('forward')
-#      # obs, rew, done = env.step('right')
-#      # obs, rew, done = env.step('pick')
-#
-#
-#
-#      for i in range(1000):
-#          action = random.choice(env.action_space)
-#          obs, rew, done = env.step(action)
-#          env.difference()
-#          print(rew)
-#          # cv2.imwrite('env_gif/img_'+str(i).zfill(3)+'.png',obs['observed'])
-#          env.render(mode='human')
-#          # cv2.imshow('win', obs)
-#          cv2.waitKey(100)
+if __name__ == '__main__':
+     env = CleanupWorld()
+     obs = env.reset()
+     # obs, rew, done = env.step('right')
+     # obs, rew, done = env.step('forward')
+     # obs, rew, done = env.step('right')
+     # obs, rew, done = env.step('pick')
+
+
+
+     for i in range(1000):
+         action = random.choice(env.action_space)
+         obs, rew, done = env.step(action)
+         env.difference()
+         print(rew)
+         # cv2.imwrite('env_gif/img_'+str(i).zfill(3)+'.png',obs['observed'])
+         env.render(mode='human')
+         # cv2.imshow('win', obs)
+         cv2.waitKey(100)
