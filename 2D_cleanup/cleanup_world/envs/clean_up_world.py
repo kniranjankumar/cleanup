@@ -113,7 +113,7 @@ class CleanupWorld(gym.Env):
         return np.sum(diff.astype('uint8'))
 
     def step(self, action):
-
+        print('step')
         action = self.action_space_str[action]
         self.t += 1
         assert self.done == False  # reset the world
