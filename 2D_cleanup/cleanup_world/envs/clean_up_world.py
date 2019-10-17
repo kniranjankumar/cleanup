@@ -75,7 +75,7 @@ class CleanupWorld(gym.Env):
                 # print('here')
                 # print(self.image_list)
                 image_goal[i*32:(i+1)*32,j*32:(j+1)*32,:] = self.image_list[self.keys[self.goal_map[i,j]]]
-        image = cv2.resize(image, self.image_shape)
+        image = cv2.resize(image, (self.image_shape, self.image_shape))
         if mode == 'human':
             # cv2.imshow('win',np.concatenate([image,image_goal], axis=1))
             cv2.imshow('win', image)
