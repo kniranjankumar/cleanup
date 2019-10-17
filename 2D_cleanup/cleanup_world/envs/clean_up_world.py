@@ -43,6 +43,7 @@ class CleanupWorld(gym.Env):
         return [seed]
 
     def reset(self):
+        print('reset')
         self.agent_location = [0, 0]
         self.agent_direction = 'up'
         positions = list(self.np_random.permutation(self.map.shape[0] * self.map.shape[1]))
@@ -113,7 +114,7 @@ class CleanupWorld(gym.Env):
         return np.sum(diff.astype('uint8'))
 
     def step(self, action):
-        print('step')
+        # print('step')
         action = self.action_space_str[action]
         self.t += 1
         assert self.done == False  # reset the world
