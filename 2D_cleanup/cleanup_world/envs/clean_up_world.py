@@ -36,6 +36,7 @@ class CleanupWorld(gym.Env):
         #      'observed': Box(high=255 * np.ones([256, 256, 3]), low=np.zeros([256, 256, 3]), dtype='uint8')})
         self.action_space = Discrete(4)
         self._seed()
+        self.is_init_goal = False
 
     def _seed(self, seed=None):
         # print('set_seed', seed)
@@ -51,9 +52,11 @@ class CleanupWorld(gym.Env):
         for i in range(5, 9):
             position = positions.pop()
             self.map[int(position / self.map.shape[0]), position % self.map.shape[1]] = i
-        for i in range(5, 9):
-            position = positions.pop()
-            self.goal_map[int(position / self.map.shape[0]), position % self.map.shape[1]] = i
+        if not self.is_init_goal:
+            for i in range(5, 9):
+                position = positions.pop()
+                self.goal_map[int(position / self.map.shape[0]), position % self.map.shape[1]] = i
+                self.is_init_goal = True
         # self.map[3,3] = 5 #cookie
         # self.map[7,2] = 6 #choco
         # self.map[1,1] = 7 #sushi
