@@ -157,6 +157,7 @@ class CleanupWorld(gym.Env):
             self.done = True
         elif self.t == self.TIME_LIMIT:
             self.done = True
+            self.t = 0
         return obs, rew, self.done, {}
 
     def get_obs(self):
