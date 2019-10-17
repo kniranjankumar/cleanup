@@ -28,8 +28,8 @@ class CleanupWorld(gym.Env):
         self.purse = None
         self.TIME_LIMIT = max_time_steps
         self.t = 0
-        self.image_shape = 256
-        self.observation_space = Box(high=255 * np.ones([256, 256, 3]), low=np.zeros([256, 256, 3]), dtype='uint8')
+        self.image_shape = 64
+        self.observation_space = Box(high=255 * np.ones([self.image_shape, self.image_shape, 3]), low=np.zeros([self.image_shape, self.image_shape, 3]), dtype='uint8')
         # self.observation_space = Dict(
         #     {'goal': Box(high=255 * np.ones([256, 256, 3]), low=np.zeros([256, 256, 3]), dtype='uint8'),
         #      'observed': Box(high=255 * np.ones([256, 256, 3]), low=np.zeros([256, 256, 3]), dtype='uint8')})
@@ -75,7 +75,7 @@ class CleanupWorld(gym.Env):
                 # print('here')
                 # print(self.image_list)
                 image_goal[i*32:(i+1)*32,j*32:(j+1)*32,:] = self.image_list[self.keys[self.goal_map[i,j]]]
-
+        image = cv2.resize(image, self.image_shape)
         if mode == 'human':
             # cv2.imshow('win',np.concatenate([image,image_goal], axis=1))
             cv2.imshow('win', image)
