@@ -8,7 +8,7 @@ env = gym.make('CartPole-v0')
 with tf.device('/GPU:0'):
         act = deepq.learn(
                 env,
-                network='cnn',
+                network='mlp',
                 lr=1e-3,
                 total_timesteps=100000,
                 buffer_size=50000,
