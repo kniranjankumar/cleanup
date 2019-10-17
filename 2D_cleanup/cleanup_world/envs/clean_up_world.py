@@ -29,7 +29,8 @@ class CleanupWorld(gym.Env):
         self.TIME_LIMIT = max_time_steps
         self.t = 0
         self.image_shape = 64
-        self.observation_space = Box(high=255 * np.ones([self.image_shape, self.image_shape, 3]), low=np.zeros([self.image_shape, self.image_shape, 3]), dtype='uint8')
+        self.observation_space = Box(high=20 * np.ones([8,8]), low=np.zeros([8, 8]), dtype='uint8')
+        # self.observation_space = Box(high=255 * np.ones([self.image_shape, self.image_shape, 3]), low=np.zeros([self.image_shape, self.image_shape, 3]), dtype='uint8')
         # self.observation_space = Dict(
         #     {'goal': Box(high=255 * np.ones([256, 256, 3]), low=np.zeros([256, 256, 3]), dtype='uint8'),
         #      'observed': Box(high=255 * np.ones([256, 256, 3]), low=np.zeros([256, 256, 3]), dtype='uint8')})
