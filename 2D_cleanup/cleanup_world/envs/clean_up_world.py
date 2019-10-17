@@ -158,7 +158,8 @@ class CleanupWorld(gym.Env):
         return obs, rew, self.done, {}
 
     def get_obs(self):
-        return self.render(mode='rgb_array')
+        return self.goal_map.reshape(-1)
+        # return self.render(mode='rgb_array')
 
 # if __name__ == '__main__':
 #      env = CleanupWorld()
