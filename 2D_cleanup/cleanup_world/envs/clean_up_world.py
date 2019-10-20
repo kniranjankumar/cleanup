@@ -44,7 +44,7 @@ class CleanupWorld(gym.Env):
         return [seed]
 
     def reset(self):
-        print('reset')
+        # print('reset')
         self.agent_location = [0, 0]
         self.agent_direction = 'up'
         positions = list(self.np_random.permutation(self.map.shape[0] * self.map.shape[1]))
