@@ -10,7 +10,7 @@ env = gym.make('2DCleanup-v0')
 # env = DummyVecEnv()
 model = DQN(MlpPolicy, env, verbose=1,tensorboard_log='/srv/share/nkannabiran3/DQN/', double_q=True, prioritized_replay=True)
 print('learning')
-model.learn(total_timesteps=100000)
+model.learn(total_timesteps=1000000)
 model.save("deepq_cartpole")
 
 # del model # remove to demonstrate saving and loading
