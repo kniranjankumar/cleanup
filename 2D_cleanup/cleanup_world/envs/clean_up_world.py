@@ -59,7 +59,8 @@ class CleanupWorld(gym.Env):
         position = positions.pop()
         self.map[int(position / self.map.shape[0]), position % self.map.shape[1]] = 5
         if not self.is_init_goal:
-            position = positions.pop()
+            # position = positions.pop()
+            position = 10
             self.apple_loc = int(position / self.map.shape[0]), position % self.map.shape[1]
             self.goal_map[int(position / self.map.shape[0]), position % self.map.shape[1]] = 5
             self.is_init_goal = True
