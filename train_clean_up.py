@@ -12,9 +12,9 @@ model = DQN(MlpPolicy, env, verbose=1)
 model.learn(total_timesteps=25000)
 model.save("deepq_cartpole")
 
-del model # remove to demonstrate saving and loading
+# del model # remove to demonstrate saving and loading
 
-model = DQN.load("deepq_cartpole")
+# model = DQN.load("deepq_cartpole")
 
 obs = env.reset()
 while True:
