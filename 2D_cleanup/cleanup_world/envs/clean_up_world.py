@@ -28,7 +28,7 @@ class CleanupWorld(gym.Env):
         self.purse = None
         self.TIME_LIMIT = max_time_steps
         self.t = 0
-        self.image_shape = 64
+        self.image_shape = 256
         self.observation_space = Box(high=20 * np.ones([64]), low=np.zeros([64]), dtype='uint8')
         # self.observation_space = Box(high=255 * np.ones([self.image_shape, self.image_shape, 3]), low=np.zeros([self.image_shape, self.image_shape, 3]), dtype='uint8')
         # self.observation_space = Dict(
@@ -37,6 +37,7 @@ class CleanupWorld(gym.Env):
         self.action_space = Discrete(4)
         self._seed()
         self.is_init_goal = False
+        self.apple_loc = 0,0
 
     def _seed(self, seed=None):
         # print('set_seed', seed)
@@ -45,18 +46,28 @@ class CleanupWorld(gym.Env):
 
     def reset(self):
         # print('reset')
+        self.map *= 0
+        if self.agent_location is not None:
+            self.map[self.agent_location[0], self.agent_location[1]] = 0
         self.agent_location = [0, 0]
         self.agent_direction = 'up'
         positions = list(self.np_random.permutation(self.map.shape[0] * self.map.shape[1]))
 
-        for i in range(5, 9):
-            position = positions.pop()
-            self.map[int(position / self.map.shape[0]), position % self.map.shape[1]] = i
+        # for i in range(5, 9):
+        #     position = positions.pop()
+        #     self.map[int(position / self.map.shape[0]), position % self.map.shape[1]] = i
+        position = positions.pop()
+        self.map[int(position / self.map.shape[0]), position % self.map.shape[1]] = 5
         if not self.is_init_goal:
-            for i in range(5, 9):
-                position = positions.pop()
-                self.goal_map[int(position / self.map.shape[0]), position % self.map.shape[1]] = i
-                self.is_init_goal = True
+            position = positions.pop()
+            self.apple_loc = int(position / self.map.shape[0]), position % self.map.shape[1]
+            self.goal_map[int(position / self.map.shape[0]), position % self.map.shape[1]] = 5
+            self.is_init_goal = True
+
+            # for i in range(5, 9):
+            #     position = positions.pop()
+            #     self.goal_map[int(position / self.map.shape[0]), position % self.map.shape[1]] = i
+            #     self.is_init_goal = True
         # self.map[3,3] = 5 #cookie
         # self.map[7,2] = 6 #choco
         # self.map[1,1] = 7 #sushi
@@ -84,7 +95,7 @@ class CleanupWorld(gym.Env):
         if mode == 'human':
             # cv2.imshow('win',np.concatenate([image,image_goal], axis=1))
             cv2.imshow('win', image)
-            # cv2.waitKey(1)
+            cv2.waitKey(5)
         elif mode == 'rgb_array':
             return image
             # return {'goal':image_goal, 'observed':image}
@@ -120,6 +131,7 @@ class CleanupWorld(gym.Env):
         # print('step')
         action = self.action_space_str[action]
         self.t += 1
+        rew = 0
         assert self.done == False  # reset the world
         if action == 'left':
             self.turn('left')
@@ -155,7 +167,10 @@ class CleanupWorld(gym.Env):
 
         obs = self.get_obs()
         diff = self.difference()
-        rew = 1-diff/4
+        # rew = 1-diff/4
+        if self.goal_map[self.apple_loc] == self.map[self.apple_loc]:
+            rew = 1
+
         if rew == 1:
             self.done = True
         elif self.t == self.TIME_LIMIT:
@@ -178,8 +193,12 @@ class CleanupWorld(gym.Env):
 #
 #
 #      for i in range(1000):
-#          action = random.choice(env.action_space)
-#          obs, rew, done = env.step(action)
+#          print(i)
+#          action = env.action_space.sample()
+#          obs, rew, done,_ = env.step(action)
+#          env.render()
+#          if done:
+#              env.reset()
 #          env.difference()
 #          print(rew)
 #          # cv2.imwrite('env_gif/img_'+str(i).zfill(3)+'.png',obs['observed'])
