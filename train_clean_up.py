@@ -1,7 +1,7 @@
 import gym
 import cleanup_world
-from baselines import deepq
-import tensorflow as tf
+# from baselines import deepq
+# import tensorflow as tf
 from stable_baselines.common.vec_env import DummyVecEnv
 from stable_baselines.deepq.policies import MlpPolicy
 from stable_baselines import DQN
