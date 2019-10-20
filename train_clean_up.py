@@ -8,7 +8,11 @@ from stable_baselines import DQN
 env = gym.make('2DCleanup-v0')
 # env = gym.make('CartPole-v1')
 # env = DummyVecEnv()
-model = DQN(MlpPolicy, env, verbose=1,tensorboard_log='/srv/share/nkannabiran3/DQN/', double_q=True, prioritized_replay=True)
+model = DQN(MlpPolicy, env, verbose=1,tensorboard_log='/srv/share/nkannabiran3/DQN/',
+            double_q=True,
+            prioritized_replay=True,
+            prioritized_replay_alpha=0.8,
+            prioritized_replay_beta0=0.2)
 print('learning')
 model.learn(total_timesteps=1000000)
 model.save("deepq_cartpole")
