@@ -188,9 +188,10 @@ class CleanupWorld(gym.Env):
     def get_obs(self):
         if self.is_goal_env:
             apple_loc = np.argwhere(self.map == 5)
-            apple_loc = apple_loc[0]*8+apple_loc[1]
             if apple_loc.shape[0] == 0:
                 apple_loc = -1
+            else:
+                apple_loc = apple_loc[0] * 8 + apple_loc[1]
             return {'observation':self.map.reshape(-1)/9-0.5,
                     'achieved_goal':apple_loc,
                     'desired_goal':self.apple_loc[0]*8+self.apple_loc[1]}
