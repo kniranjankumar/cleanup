@@ -2,7 +2,7 @@ import gym
 import cleanup_world
 # from baselines import deepq
 # import tensorflow as tf
-from stable_baselines import HER, DQN, SAC, DDPG, TD3
+from stable_baselines import HER, DQN
 from stable_baselines.her import GoalSelectionStrategy, HERGoalEnvWrapper
 # from stable_baselines.common.vec_env import DummyVecEnv
 # from stable_baselines.deepq.policies import MlpPolicy
