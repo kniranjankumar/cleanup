@@ -200,6 +200,8 @@ class CleanupWorld(gym.Env):
         return self.map.reshape(-1)/9-0.5
         # return self.render(mode='rgb_array')
     def compute_reward(self,achieved_goal, desired_goal, info):
+        achieved_goal = achieved_goal.reshape([8,8])
+        desired_goal = desired_goal.reshape([8,8])
         apple_loc = np.argwhere(achieved_goal == 5)
         apple_loc = apple_loc[0, :]
         apple_goal = np.argwhere(desired_goal == 5)
