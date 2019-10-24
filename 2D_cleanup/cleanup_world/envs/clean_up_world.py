@@ -201,16 +201,23 @@ class CleanupWorld(gym.Env):
         # return self.render(mode='rgb_array')
     def compute_reward(self, achieved_goal, desired_goal, info):
         # print(achieved_goal)
+        picked_up = False
         achieved_goal = (achieved_goal.reshape([8,8]) + 0.5)*9
         desired_goal = (desired_goal.reshape([8,8])+0.5)*9
         # print(achieved_goal)
         apple_loc = np.argwhere(achieved_goal == 5)
-        # print(apple_loc)
-        apple_loc = apple_loc[0, :]
+        if apple_loc.shape[0] == 0:
+            #agent has picked up the apple
+            picked_up = True
+            apple_loc = self.agent_location
+        else:
+            apple_loc = apple_loc[0, :]
         apple_goal = np.argwhere(desired_goal == 5)
         apple_goal = apple_goal[0, :]
         print(apple_loc,apple_goal)
         diff = np.linalg.norm(apple_loc-apple_goal)
+        if diff < 0.01 and not picked_up:
+            diff += 8
         return -diff/8
 # if __name__ == '__main__':
 #      env = CleanupWorld()
