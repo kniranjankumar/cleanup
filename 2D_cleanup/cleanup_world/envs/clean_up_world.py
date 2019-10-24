@@ -187,19 +187,19 @@ class CleanupWorld(gym.Env):
 
     def get_obs(self):
         if self.is_goal_env:
-            apple_loc = np.argwhere(self.map == 5)
-            apple_loc = apple_loc[0,:]
-            if apple_loc.shape[0] == 0:
-                apple_loc = -1
-            else:
-                # print(apple_loc)
-                apple_loc = apple_loc[0] * 8 + apple_loc[1]
+            # apple_loc = np.argwhere(self.map == 5)
+            # apple_loc = apple_loc[0,:]
+            # if apple_loc.shape[0] == 0:
+            #     apple_loc = -1
+            # else:
+            #     # print(apple_loc)
+            #     apple_loc = apple_loc[0] * 8 + apple_loc[1]
             return {'observation':self.map.reshape(-1)/9-0.5,
                     'achieved_goal':self.map.reshape(-1)/9-0.5,
                     'desired_goal':self.goal_map.reshape(-1)/9-0.5}
         return self.map.reshape(-1)/9-0.5
         # return self.render(mode='rgb_array')
-    def compute_reward(self,achieved_goal, desired_goal, info):
+    def compute_reward(self, achieved_goal, desired_goal, info):
         # print(achieved_goal)
         achieved_goal = (achieved_goal.reshape([8,8]) + 0.5)*9
         desired_goal = (desired_goal.reshape([8,8])+0.5)*9
