@@ -188,6 +188,7 @@ class CleanupWorld(gym.Env):
     def get_obs(self):
         if self.is_goal_env:
             apple_loc = np.argwhere(self.map == 5)
+            apple_loc = apple_loc[0,:]
             if apple_loc.shape[0] == 0:
                 apple_loc = -1
             else:
