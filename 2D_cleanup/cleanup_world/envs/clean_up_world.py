@@ -191,6 +191,7 @@ class CleanupWorld(gym.Env):
             if apple_loc.shape[0] == 0:
                 apple_loc = -1
             else:
+                print(apple_loc)
                 apple_loc = apple_loc[0] * 8 + apple_loc[1]
             return {'observation':self.map.reshape(-1)/9-0.5,
                     'achieved_goal':apple_loc,
