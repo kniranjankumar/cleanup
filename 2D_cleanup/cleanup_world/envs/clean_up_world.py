@@ -219,7 +219,7 @@ class CleanupWorld(gym.Env):
         else:
             apple_goal = apple_goal[0, :]
         print(apple_loc,apple_goal)
-        diff = np.linalg.norm(apple_loc-apple_goal)
+        diff = np.linalg.norm(np.array(apple_loc)-np.array(apple_goal))
         if diff < 0.01 and not picked_up:
             diff += 8
         return -diff/8
