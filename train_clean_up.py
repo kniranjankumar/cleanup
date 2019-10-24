@@ -2,20 +2,26 @@ import gym
 import cleanup_world
 # from baselines import deepq
 # import tensorflow as tf
-from stable_baselines.common.vec_env import DummyVecEnv
-from stable_baselines.deepq.policies import MlpPolicy
-from stable_baselines import DQN
+from stable_baselines import HER, DQN, SAC, DDPG, TD3
+from stable_baselines.her import GoalSelectionStrategy, HERGoalEnvWrapper
+# from stable_baselines.common.vec_env import DummyVecEnv
+# from stable_baselines.deepq.policies import MlpPolicy
+# from stable_baselines import DQN
 env = gym.make('2DCleanup-v0')
 # env = gym.make('CartPole-v1')
 # env = DummyVecEnv()
-model = DQN(MlpPolicy, env, verbose=1,tensorboard_log='/srv/share/nkannabiran3/DQN/',
-            double_q=True,
-            prioritized_replay=True,
-            prioritized_replay_alpha=0.8,
-            prioritized_replay_beta0=0.2)
+# model = DQN(MlpPolicy, env, verbose=1,tensorboard_log='/srv/share/nkannabiran3/DQN/',
+#             double_q=True,
+#             prioritized_replay=True,
+#             prioritized_replay_alpha=0.8,
+#             prioritized_replay_beta0=0.2)
+
+goal_selection_strategy = 'future'
+model = HER('MlpPolicy', env, DQN, n_sampled_goal=4, goal_selection_strategy=goal_selection_strategy,
+                                                verbose=1)
 print('learning')
-model.learn(total_timesteps=1000000)
-model.save("deepq_cartpole")
+model.learn(total_timesteps=1000000, tb_log_name='/srv/share/nkannabiran3/DQN_HER/')
+model.save("deepq_her__cartpole")
 
 # del model # remove to demonstrate saving and loading
 
