@@ -32,8 +32,8 @@ class CleanupWorld(gym.Env):
         # self.observation_space = Box(high=20 * np.ones([64]), low=np.zeros([64]), dtype='uint8')
         self.observation_space = Dict(
             {'observation': Box(high=20 * np.ones([64]), low=np.zeros([64]), dtype='uint8'),
-             'achieved_goal': Box(high=np.array([64]) , low=np.array([0]), dtype='uint8'),
-             'desired_goal': Box(high=np.array([64]) , low=np.array([0]), dtype='uint8')})
+             'achieved_goal': Box(high=20*np.array([64]) , low=np.array([64]), dtype='uint8'),
+             'desired_goal': Box(high=20*np.array([64]) , low=np.array([64]), dtype='uint8')})
 
         # self.observation_space = Box(high=255 * np.ones([self.image_shape, self.image_shape, 3]), low=np.zeros([self.image_shape, self.image_shape, 3]), dtype='uint8')
         # self.observation_space = Dict(
@@ -195,8 +195,8 @@ class CleanupWorld(gym.Env):
                 print(apple_loc)
                 apple_loc = apple_loc[0] * 8 + apple_loc[1]
             return {'observation':self.map.reshape(-1)/9-0.5,
-                    'achieved_goal':apple_loc,
-                    'desired_goal':self.apple_loc[0]*8+self.apple_loc[1]}
+                    'achieved_goal':self.map.reshape(-1)/9-0.5,
+                    'desired_goal':self.goal_map.reshape(-1)/9-0.5}
         return self.map.reshape(-1)/9-0.5
         # return self.render(mode='rgb_array')
 
