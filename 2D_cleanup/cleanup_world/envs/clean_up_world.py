@@ -32,8 +32,8 @@ class CleanupWorld(gym.Env):
         # self.observation_space = Box(high=20 * np.ones([64]), low=np.zeros([64]), dtype='uint8')
         self.observation_space = Dict(
             {'observation': Box(high=20 * np.ones([64]), low=np.zeros([64]), dtype='uint8'),
-             'achieved_goal': Box(high=64 , low=0, dtype='uint8'),
-             'desired_goal': Box(high=64 , low=0, dtype='uint8')})
+             'achieved_goal': Box(high=np.array([64]) , low=np.array([0]), dtype='uint8'),
+             'desired_goal': Box(high=np.array([64]) , low=np.array([0]), dtype='uint8')})
 
         # self.observation_space = Box(high=255 * np.ones([self.image_shape, self.image_shape, 3]), low=np.zeros([self.image_shape, self.image_shape, 3]), dtype='uint8')
         # self.observation_space = Dict(
