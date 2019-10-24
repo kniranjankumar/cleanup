@@ -192,7 +192,7 @@ class CleanupWorld(gym.Env):
             if apple_loc.shape[0] == 0:
                 apple_loc = -1
             else:
-                print(apple_loc)
+                # print(apple_loc)
                 apple_loc = apple_loc[0] * 8 + apple_loc[1]
             return {'observation':self.map.reshape(-1)/9-0.5,
                     'achieved_goal':self.map.reshape(-1)/9-0.5,
@@ -203,7 +203,7 @@ class CleanupWorld(gym.Env):
         apple_loc = np.argwhere(achieved_goal == 5)
         apple_loc = apple_loc[0, :]
         apple_goal = np.argwhere(desired_goal == 5)
-        apple_goal = apple_loc[0, :]
+        apple_goal = apple_goal[0, :]
         diff = np.linalg.norm(apple_loc, apple_goal)
         return -diff/8
 # if __name__ == '__main__':
