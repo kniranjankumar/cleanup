@@ -213,7 +213,11 @@ class CleanupWorld(gym.Env):
         else:
             apple_loc = apple_loc[0, :]
         apple_goal = np.argwhere(desired_goal == 5)
-        apple_goal = apple_goal[0, :]
+        if apple_goal.shape[0] == 0:
+            #agent has picked up the apple
+            apple_goal = self.agent_location
+        else:
+            apple_goal = apple_goal[0, :]
         print(apple_loc,apple_goal)
         diff = np.linalg.norm(apple_loc-apple_goal)
         if diff < 0.01 and not picked_up:
