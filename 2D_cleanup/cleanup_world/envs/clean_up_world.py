@@ -199,7 +199,13 @@ class CleanupWorld(gym.Env):
                     'desired_goal':self.goal_map.reshape(-1)/9-0.5}
         return self.map.reshape(-1)/9-0.5
         # return self.render(mode='rgb_array')
-
+    def compute_reward(self,achieved_goal, desired_goal, info):
+        apple_loc = np.argwhere(achieved_goal == 5)
+        apple_loc = apple_loc[0, :]
+        apple_goal = np.argwhere(desired_goal == 5)
+        apple_goal = apple_loc[0, :]
+        diff = np.linalg.norm(apple_loc, apple_goal)
+        return -diff/8
 # if __name__ == '__main__':
 #      env = CleanupWorld()
 #      obs = env.reset()
