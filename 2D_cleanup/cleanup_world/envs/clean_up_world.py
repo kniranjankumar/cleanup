@@ -203,6 +203,7 @@ class CleanupWorld(gym.Env):
         achieved_goal = achieved_goal.reshape([8,8])
         desired_goal = desired_goal.reshape([8,8])
         apple_loc = np.argwhere(achieved_goal == 5)
+        print(apple_loc)
         apple_loc = apple_loc[0, :]
         apple_goal = np.argwhere(desired_goal == 5)
         apple_goal = apple_goal[0, :]
