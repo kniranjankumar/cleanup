@@ -210,7 +210,7 @@ class CleanupWorld(gym.Env):
         apple_goal = np.argwhere(desired_goal == 5)
         apple_goal = apple_goal[0, :]
         print(apple_loc,apple_goal)
-        diff = np.linalg.norm(apple_loc, apple_goal)
+        diff = np.linalg.norm(apple_loc-apple_goal)
         return -diff/8
 # if __name__ == '__main__':
 #      env = CleanupWorld()
