@@ -10,7 +10,7 @@ from gym.spaces import Dict, Box, Discrete
 
 class CleanupWorld(gym.Env):
 
-    def __init__(self, max_time_steps=100):
+    def __init__(self, max_time_steps=100,is_goal_env=True):
 
         self.action_space_str = ['forward', 'left', 'right', 'pick']
         self.directions = {'up':0,'left':1,'down':2,'right':3}
@@ -38,6 +38,7 @@ class CleanupWorld(gym.Env):
         self._seed()
         self.is_init_goal = False
         self.apple_loc = 0,0
+        self.is_goal_env = is_goal_env
 
     def _seed(self, seed=None):
         # print('set_seed', seed)
@@ -180,6 +181,11 @@ class CleanupWorld(gym.Env):
         return obs, rew, self.done, {}
 
     def get_obs(self):
+        if self.is_goal_env:
+            apple_loc = np.argwhere(self.map == 5)
+            if apple_loc.shape[0] == 0:
+                apple_loc = (-1,-1)
+            return {'observation':self.map.reshape(-1)/9-0.5, 'achieved_goal':np.array(apple_loc), 'desired_goal':np.array(self.apple_loc)}
         return self.map.reshape(-1)/9-0.5
         # return self.render(mode='rgb_array')
 
