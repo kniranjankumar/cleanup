@@ -4,6 +4,7 @@ from matplotlib import pyplot as plt
 import random
 import time
 import sys
+import os
 
 ## python packages for pygame
 import pygame as pg
@@ -56,11 +57,12 @@ class CleanupWorld(object):
 		self.action_space = range(4)
 		
 		## matrix of grid world, images 
+		pwd = os.getcwd()
 		self.map = np.zeros([board_size[0], board_size[1]],dtype='uint8')
 		self.goal_map = np.zeros([board_size[0], board_size[1]],dtype='uint8')
 		self.images= ['bg.png','sprite_up.png','sprite_left.png','sprite_down.png','sprite_right.png', 'obj0.png', 'obj1.png', 'obj2.png', 'obj3.png', self.chair_image[random_number_1], 'coffee_cup.png', self.couch_image[random_number_2], self.cupboard_image[random_number_3], 'laptop.png', 'phone.png', 'plates.png', self.table_image[random_number_4], 'tea_table.png']
 		self.keys = ['bg','up','left','down','right','cookie','choco','sushi','apple', 'chair', 'coffee_cup', 'couch', 'cupboard', 'laptop', 'phone', 'plates', 'table', 'tea_table']
-		self.image_list = {key:'/home/nithin/Desktop/cleanup/cleanup/2D_cleanup/cleanup_world/envs/images/scene_objects/'+img for img,key in zip(self.images,self.keys)}
+		self.image_list = {key:pwd+'/2D_cleanup/cleanup_world/envs/images/scene_objects/'+img for img,key in zip(self.images,self.keys)}
 
 		## timing related 
 		self.TIME_LIMIT = max_time_steps
@@ -193,6 +195,10 @@ if __name__=="__main__":
 	time.sleep(5)
 
 	for i in range(10):
+		for event in pg.event.get():
+			if event.type == QUIT:
+				pg.quit()
+				sys.exit()
 		action = random.choice(game.action_space_str)
 		rew, done = game.step(action)
 		game.difference()
