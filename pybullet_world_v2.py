@@ -241,7 +241,7 @@ if __name__ == "__main__":
                     print(keys[str(k)]+' pressed')
                     if keys[str(k)] == 'up':
                         world.step('forward')
-                   if keys[str(k)] == 'right':
+                    if keys[str(k)] == 'right':
                         world.step('right')
                     if keys[str(k)] == 'left':
                         world.step('left')
