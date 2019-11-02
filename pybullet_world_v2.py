@@ -159,6 +159,11 @@ class CleanupWorld():
         self.map[3, 3] = self.world_objects['chair'].objectid
         self.world_objects['chair'].set_location([3,3])
         
+    def get_obj_from_id(self, id):
+        for k, v in self.objectid.items():
+            if v == id:
+                obj_name = k
+                return obj_name
 
     def update_render(self, obj):
         obj.put_object_in_grid()
