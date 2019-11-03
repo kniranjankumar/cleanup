@@ -20,7 +20,7 @@ p.configureDebugVisualizer(p.COV_ENABLE_TINY_RENDERER, 0)
 
 
 class Object():
-    def __init__(self, world_properties, objectid, facing_direction, name, offset_position, offset_orientation, location, scale, mesh):
+    def __init__(self, world_properties, objectid, facing_direction, name, offset_position, offset_orientation, location, scale, mesh, surface_offset=0, is_infertile=True):
         self.world_properties = world_properties
         self.objectid = objectid
         self.facing_direction = facing_direction
@@ -28,19 +28,28 @@ class Object():
         self.offset_position = offset_position
         self.offset_orientation = offset_orientation
         self.orientation = self.offset_orientation
-
+        self.is_infertile = is_infertile
         self.location = location
         self.scale = scale
         self.children = {}
         self.parent = None
+        self.surface_offset = surface_offset
         self.Uid = self.add_mesh(path=mesh['path'], mesh_name=mesh['model_name'], tex_name=mesh['texture_name'], position=[
             location[0]*self.world_properties['scale'], location[1]*self.world_properties['scale'], 1], orientation=self.offset_orientation, scale=self.scale)
         self.put_object_in_grid()
 
     def add_children(self, child):
+        assert self.is_infertile == False
         self.children[child.name] = child
         child.set_location(self.location)
+        child.parent = self
 
+    def remove_children(self):
+        child = list(self.children.values())[0]
+        child.parent = None
+        self.children = {}
+        return child
+        
     def set_orientation(self, turn_direction):
         if turn_direction == 'right':
             self.facing_direction -= 1
@@ -93,21 +102,21 @@ class Object():
             p.changeVisualShape(bodyUid, -1, textureUniqueId=texUid)
         return bodyUid
 
-    def put_object_in_grid(self, on_ground=True):
+    def put_object_in_grid(self):
         R = np.array(p.getMatrixFromQuaternion(self.orientation)).reshape(3, 3)
         # print(R.shape, np.array(offset).shape)
         offset = -R@np.array(self.offset_position)
         # base_orientation = self.orientation[object_name]
-        if on_ground:
-            p.resetBasePositionAndOrientation(self.objectid, [self.location[0]*self.world_properties['scale']+offset[0], self.location[1] *
-                                                              self.world_properties['scale']+offset[1], offset[2]], self.orientation)  # place agent in new location
+        if self.has_parent:
+            height = self.parent.surface_offset
         else:
-            p.resetBasePositionAndOrientation(self.objectid, [self.location[0]*self.world_properties['scale']+offset[0], self.location[1]
-                                                              * self.world_properties['scale']+offset[1], 1+offset[2]], self.orientation)  # place agent in new location
+            height = 0
+        p.resetBasePositionAndOrientation(self.objectid, [self.location[0]*self.world_properties['scale']+offset[0], self.location[1]
+                                                              * self.world_properties['scale']+offset[1], height+offset[2]], self.orientation)  # place agent in new location
         if self.has_children:
-            print(self.children)
+            # print(self.children)
             for child_name, child in self.children.items():
-                child.put_object_in_grid(on_ground=False)
+                child.put_object_in_grid()
 
     @property
     def has_children(self):
@@ -115,9 +124,9 @@ class Object():
 
         return False if len(self.children.keys()) == 0 else True
 
+    @property
     def has_parent(self):
-        return False if self.parent == None else True
-
+        return not self.parent == None
 
 class CleanupWorld():
 
@@ -128,22 +137,26 @@ class CleanupWorld():
         self.done = False
         self.world_size = 8
         # channel 0 for marking object positions and channel 1 to store orientation/direction
-        self.map = np.zeros(
-            [self.world_size, self.world_size], dtype='uint8')
-        self.objectid = {'agent': 1, 'chair': 2}
+        self.map = np.empty((self.world_size,self.world_size), dtype=object)
+        self.objectid = {'agent': 1, 'chair': 2, 'plate': 3}
         self.object_list = []
         self.world_properties = {'scale': 1, 'size': 8}
         agent_mesh = {'path': "./data/lego_man/",
                       'model_name': "LEGO_Man.obj", 'texture_name': None}
-        agent = Object(world_properties=self.world_properties, objectid=1, facing_direction=0, name='agent', offset_position=[
-                       0, 0, 0.05], offset_orientation=[0, 0.7071068, 0.7071068, 0], location=[0, 0], scale=0.3, mesh=agent_mesh)
+        agent = Object(world_properties=self.world_properties, objectid=self.objectid['agent'], facing_direction=0, name='agent', offset_position=[
+                       0, 0, 0.05], offset_orientation=[0, 0.7071068, 0.7071068, 0], location=[0, 0], scale=0.3, mesh=agent_mesh,surface_offset=1.6, is_infertile=False)
         chair_mesh = {'path': "./data/chair/",
                       'model_name': "chair.obj", 'texture_name': "diffuse.tga"}
-        chair = Object(world_properties=self.world_properties, objectid=2, facing_direction=0, name='chair', offset_position=[
-                       -0.35, -0.8, 0.3], offset_orientation=[0.7071068, 0, 0, 0.7071068], location=[3, 3], scale=0.08, mesh=chair_mesh)
-        self.world_objects = {'agent': agent, 'chair': chair}
-        self.map[0, 0] = agent.objectid
-        self.map[3, 3] = chair.objectid
+        chair = Object(world_properties=self.world_properties, objectid=self.objectid['chair'], facing_direction=0, name='chair', offset_position=[
+                       -0.35, -0.8, 0.3], offset_orientation=[0.7071068, 0, 0, 0.7071068], location=[3, 3], scale=0.08, mesh=chair_mesh,surface_offset=0.9, is_infertile=False)
+        plate_mesh = {'path':"./data/plate/",'model_name':"Tarelka.obj",'texture_name':"Tarelka.mtl"}
+        plate = Object(world_properties=self.world_properties, objectid=self.objectid['plate'], facing_direction=0, name='plate', offset_position=[
+                       -0.0, -0.0, 0.0], offset_orientation=[0.7071068, 0, 0, 0.7071068], location=[2, 2], scale=3, mesh=plate_mesh)
+
+        self.world_objects = {'agent': agent, 'chair': chair, 'plate':plate}
+        self.map[0, 0] = agent
+        self.map[3, 3] = chair
+        self.map[2, 2] = plate
         self.done = True
         self.item_on_hand = None
         self.TIME_LIMIT = max_time_steps
@@ -179,58 +192,55 @@ class CleanupWorld():
                 new_loc = map_loc[0], map_loc[1]-1
             elif self.world_objects['agent'].facing_direction == 3:
                 new_loc = map_loc[0]+1, map_loc[1]
-            print('here', new_loc)
+            # print('here', new_loc)
 
             if new_loc[0] < 0 or new_loc[1] < 0 or new_loc[0] > self.world_properties['size']-1 or new_loc[1] > self.world_properties['size']-1:
                 return
             if action == 'forward':
-                if self.map[new_loc[0], new_loc[1]] != 0:
+                if isinstance(self.map[new_loc[0], new_loc[1]],Object):
                     return
 
-                self.map[new_loc[0], new_loc[1]
-                         ] = self.world_objects['agent'].objectid
+                self.map[new_loc[0], new_loc[1]] = self.world_objects['agent']
                 self.world_objects['agent'].set_location(new_loc)
                 # self.world_objects['agent'].location = new_loc[0], new_loc[1]
-                self.map[map_loc[0], map_loc[1]] = 0
+                self.map[map_loc[0], map_loc[1]] = object()
                 self.update_render(self.world_objects['agent'])
             elif action == 'pick':
-                if self.map[new_loc[0], new_loc[1]] == 0:
-                    # Execute place action
-                    if self.world_objects['agent'].has_children:
-                        child = list(
-                            self.world_objects['agent'].children.values())[0]
-                        self.map[new_loc[0], new_loc[1]] = child.objectid
-                        del self.world_objects['agent'].children[child.name]
-                        child.set_location(new_loc)
-                        print(self.map[new_loc[0], new_loc[1]])
-                        self.update_render(child)
-                    else:
-                        return
-                else:
-                    if self.world_objects['agent'].has_children != False:
-                        return
-                    else:
-                        obj_in_front_name = self.get_obj_from_id(
-                            self.map[new_loc[0], new_loc[1]])
-                        self.world_objects['agent'].add_children(
-                            self.world_objects[obj_in_front_name])
+                if not self.world_objects['agent'].has_children:               
+                    if isinstance(self.map[new_loc[0], new_loc[1]],Object):
+                        # Execute pick action
+                        obj_in_front = self.map[new_loc[0], new_loc[1]]
+                        if obj_in_front.has_children:
+                            obj_in_front = obj_in_front.remove_children()
+                        else:
+                            self.map[new_loc[0], new_loc[1]] = object()                            
+                        print('adding children')
+                        self.world_objects['agent'].add_children(obj_in_front)
                         self.update_render(self.world_objects['agent'])
-                        self.map[new_loc[0], new_loc[1]] = 0
+                        # self.map[new_loc[0], new_loc[1]] = 0
+                else:
+                    # Execute place action
+                        obj_in_front = self.map[new_loc[0], new_loc[1]]
+                        if isinstance(obj_in_front,Object): 
+                            if not obj_in_front.is_infertile:
+                                child = self.world_objects['agent'].remove_children()                                
+                                obj_in_front.add_children(child)
+                            else:
+                                return
+                        else:
+                            child = self.world_objects['agent'].remove_children()                        
+                            self.map[new_loc[0], new_loc[1]] = child
+                        # del self.world_objects['agent'].children[child.name]
+                        child.set_location(new_loc)
+                        self.update_render(child)
+
 
         if action == 'right':
             self.world_objects['agent'].set_orientation('right')
-            if self.item_on_hand != None:
-                self.item_on_hand_dir -= 1
-                if self.item_on_hand_dir < 0:
-                    self.item_on_hand_dir = 3
             self.update_render(self.world_objects['agent'])
 
         if action == 'left':
             self.world_objects['agent'].set_orientation('left')
-            if self.item_on_hand != None:
-                self.item_on_hand_dir += 1
-                if self.item_on_hand_dir == 4:
-                    self.item_on_hand_dir = 0
             self.update_render(self.world_objects['agent'])
 
 
