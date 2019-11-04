@@ -1,0 +1,112 @@
+[
+    {
+        "name": "agent",
+        "path": "./data/lego_man/",
+        "model_name": "LEGO_Man.obj",
+        "texture_name": null,
+        "offset_position": [
+            0,
+            0,
+            0.05
+        ],
+        "offset_orientation": [
+            0,
+            0.7071068,
+            0.7071068,
+            0
+        ],
+        "scale": 0.3,
+        "is_infertile": false,
+        "surface_offset":1.6,
+        "is_movable":true,
+        "shape":[1,1]
+    },
+    {
+        "name": "chair",
+        "path": "./data/chair/",
+        "model_name": "chair.obj",
+        "texture_name": "diffuse.tga",
+        "offset_position": [
+            -0.35,
+            -0.8,
+            0.3
+        ],
+        "offset_orientation": [
+            0.7071068,
+            0,
+            0,
+            0.7071068
+        ],
+        "scale": 0.08,
+        "is_infertile": false,
+        "surface_offset":0.9,
+        "is_movable":true,
+        "shape":[1,1]
+    },
+    {
+        "name": "plate",
+        "path": "./data/plate/",
+        "model_name": "Tarelka.obj",
+        "texture_name": "Tarelka.mtl",
+        "offset_position": [
+            0,
+            0,
+            0
+        ],
+        "offset_orientation": [
+            0.7071068,
+            0,
+            0,
+            0.7071068
+        ],
+        "scale": 3,
+        "is_infertile": true,
+        "surface_offset":0,
+        "is_movable":true,
+        "shape":[1,1]
+    },
+    {
+        "name": "book",
+        "path": "./data/book/",
+        "model_name": "book.obj",
+        "texture_name": "book.jpg",
+        "offset_position": [
+            0,
+            0,
+            0
+        ],
+        "offset_orientation": [
+            0,
+            0,
+            0,
+            1
+        ],
+        "scale": 0.07,
+        "is_infertile": true,
+        "surface_offset":0,
+        "is_movable":true,
+        "shape":[1,1]
+    },
+    {
+        "name": "coffee_table",
+        "path": "./data/coffee_table/",
+        "model_name": "coffee_table.obj",
+        "texture_name": "coffee_table.mtl",
+        "offset_position": [
+            -1,
+            -0.43,
+            0
+        ],
+        "offset_orientation": [
+            0,
+            0,
+            0,
+            1
+        ],
+        "scale": 0.022,
+        "is_infertile": false,
+        "surface_offset":1.1,
+        "is_movable":false,
+        "shape":[2,2]
+    }
+]

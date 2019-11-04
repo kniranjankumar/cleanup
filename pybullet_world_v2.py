@@ -3,6 +3,7 @@ import time
 import math
 import numpy as np
 import os
+import json
 cid = p.connect(p.SHARED_MEMORY)
 if (cid < 0):
     p.connect(p.GUI)
@@ -20,21 +21,22 @@ p.configureDebugVisualizer(p.COV_ENABLE_TINY_RENDERER, 0)
 
 
 class Object():
-    def __init__(self, world_properties, objectid, facing_direction, name, offset_position, offset_orientation, location, scale, mesh, surface_offset=0, is_infertile=True):
+    def __init__(self, world_properties, objectid, properties,facing_direction=0, location=[0,0]):
+        self.offset_position=properties['offset_position'] 
+        self.offset_orientation=properties['offset_orientation']
+        self.scale=properties['scale']
+        self.surface_offset=properties['surface_offset']
+        self.is_infertile=properties['is_infertile']
+        self.name = properties['name']       
         self.world_properties = world_properties
         self.objectid = objectid
         self.facing_direction = facing_direction
-        self.name = name
-        self.offset_position = offset_position
-        self.offset_orientation = offset_orientation
-        self.orientation = self.offset_orientation
-        self.is_infertile = is_infertile
+        self.orientation = properties['offset_orientation']
         self.location = location
-        self.scale = scale
         self.children = {}
         self.parent = None
-        self.surface_offset = surface_offset
-        self.Uid = self.add_mesh(path=mesh['path'], mesh_name=mesh['model_name'], tex_name=mesh['texture_name'], position=[
+        self.is_movable = properties['is_movable']
+        self.Uid = self.add_mesh(path=properties['path'], mesh_name=properties['model_name'], tex_name=properties['texture_name'], position=[
             location[0]*self.world_properties['scale'], location[1]*self.world_properties['scale'], 1], orientation=self.offset_orientation, scale=self.scale)
         self.put_object_in_grid()
 
@@ -43,11 +45,13 @@ class Object():
         self.children[child.name] = child
         child.set_location(self.location)
         child.parent = self
+        self.is_infertile = True
 
     def remove_children(self):
         child = list(self.children.values())[0]
         child.parent = None
         self.children = {}
+        self.is_infertile = False
         return child
         
     def set_orientation(self, turn_direction):
@@ -61,7 +65,8 @@ class Object():
                 self.facing_direction = 0
         print('facing', self.facing_direction)
         angle = np.pi/2*self.facing_direction
-        new_angles = [np.pi/2, 0, np.pi+angle]
+        base_angle = p.getEulerFromQuaternion(self.offset_orientation)
+        new_angles = [base_angle[0], 0, np.pi+angle]
         quaternion = p.getQuaternionFromEuler(new_angles)
         if self.has_children:
             for child_name, child in self.children.items():
@@ -77,6 +82,9 @@ class Object():
     def add_mesh(self, path="./data/chair/", mesh_name="chair.obj", tex_name="diffuse.tga", position=[0, 0, 1], orientation=[0.7071068, 0, 0, 0.7071068], scale=0.1):
         shift = [0, -0.02, 0]
         meshScale = [scale, scale, scale]
+        path1 = "./data/chair/"
+        mesh_name1="chair.obj"
+        tex_name1=None
         # the visual shape and collision shape can be re-used by all createMultiBody instances (instancing)
         visualShapeId = p.createVisualShape(shapeType=p.GEOM_MESH,
                                             fileName=path+mesh_name,
@@ -119,14 +127,15 @@ class Object():
                 child.put_object_in_grid()
 
     @property
-    def has_children(self):
+    def has_children(self, loc=[0,0]):
         print(self.children)
 
         return False if len(self.children.keys()) == 0 else True
-
+  
     @property
     def has_parent(self):
         return not self.parent == None
+    
 
 class CleanupWorld():
 
@@ -138,25 +147,18 @@ class CleanupWorld():
         self.world_size = 8
         # channel 0 for marking object positions and channel 1 to store orientation/direction
         self.map = np.empty((self.world_size,self.world_size), dtype=object)
-        self.objectid = {'agent': 1, 'chair': 2, 'plate': 3}
-        self.object_list = []
+        self.world_objects = {}
         self.world_properties = {'scale': 1, 'size': 8}
-        agent_mesh = {'path': "./data/lego_man/",
-                      'model_name': "LEGO_Man.obj", 'texture_name': None}
-        agent = Object(world_properties=self.world_properties, objectid=self.objectid['agent'], facing_direction=0, name='agent', offset_position=[
-                       0, 0, 0.05], offset_orientation=[0, 0.7071068, 0.7071068, 0], location=[0, 0], scale=0.3, mesh=agent_mesh,surface_offset=1.6, is_infertile=False)
-        chair_mesh = {'path': "./data/chair/",
-                      'model_name': "chair.obj", 'texture_name': "diffuse.tga"}
-        chair = Object(world_properties=self.world_properties, objectid=self.objectid['chair'], facing_direction=0, name='chair', offset_position=[
-                       -0.35, -0.8, 0.3], offset_orientation=[0.7071068, 0, 0, 0.7071068], location=[3, 3], scale=0.08, mesh=chair_mesh,surface_offset=0.9, is_infertile=False)
-        plate_mesh = {'path':"./data/plate/",'model_name':"Tarelka.obj",'texture_name':"Tarelka.mtl"}
-        plate = Object(world_properties=self.world_properties, objectid=self.objectid['plate'], facing_direction=0, name='plate', offset_position=[
-                       -0.0, -0.0, 0.0], offset_orientation=[0.7071068, 0, 0, 0.7071068], location=[2, 2], scale=3, mesh=plate_mesh)
-
-        self.world_objects = {'agent': agent, 'chair': chair, 'plate':plate}
-        self.map[0, 0] = agent
-        self.map[3, 3] = chair
-        self.map[2, 2] = plate
+        with open('objects.json','r') as f:
+            obj_list = json.load(f)
+        for i in range(len(obj_list)):
+            agent = Object(world_properties=self.world_properties, 
+                objectid=i+1, 
+                location=[i, i],                 
+                properties=obj_list[i])
+            self.map[i:i+obj_list[i]['shape'][0],i:i+obj_list[i]['shape'][0]] = agent
+            self.world_objects[obj_list[i]['name']] = agent
+            
         self.done = True
         self.item_on_hand = None
         self.TIME_LIMIT = max_time_steps
@@ -213,7 +215,10 @@ class CleanupWorld():
                         if obj_in_front.has_children:
                             obj_in_front = obj_in_front.remove_children()
                         else:
-                            self.map[new_loc[0], new_loc[1]] = object()                            
+                            if obj_in_front.is_movable:
+                                self.map[new_loc[0], new_loc[1]] = object()  
+                            else:
+                                return                          
                         print('adding children')
                         self.world_objects['agent'].add_children(obj_in_front)
                         self.update_render(self.world_objects['agent'])
