@@ -107,6 +107,6 @@
         "is_infertile": false,
         "surface_offset":1.1,
         "is_movable":false,
-        "shape":[2,2]
+        "shape":[3,2]
     }
 ]

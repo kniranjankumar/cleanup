@@ -35,23 +35,35 @@ class Object():
         self.location = location
         self.children = {}
         self.parent = None
+        shape = properties['shape']
+        self.slots = np.empty(shape, dtype=object)
         self.is_movable = properties['is_movable']
         self.Uid = self.add_mesh(path=properties['path'], mesh_name=properties['model_name'], tex_name=properties['texture_name'], position=[
             location[0]*self.world_properties['scale'], location[1]*self.world_properties['scale'], 1], orientation=self.offset_orientation, scale=self.scale)
         self.put_object_in_grid()
 
-    def add_children(self, child):
+    def add_children(self, child,loc):
         assert self.is_infertile == False
-        self.children[child.name] = child
-        child.set_location(self.location)
-        child.parent = self
-        self.is_infertile = True
+        relative_loc = self.local_position(loc)
+        print('relative location', relative_loc)
+        if isinstance(self.slots[relative_loc[0],relative_loc[1]],Object):
+            return False
+        else:
+            self.slots[relative_loc[0],relative_loc[1]] = child
+            self.children[child.name] = child
+            child.set_location(loc)
+            child.parent = self
+            return True
+        # self.is_infertile = True
 
-    def remove_children(self):
-        child = list(self.children.values())[0]
-        child.parent = None
-        self.children = {}
-        self.is_infertile = False
+        
+    def remove_children(self,loc):
+        relative_loc = self.local_position(loc)
+        if isinstance(self.slots[relative_loc[0],relative_loc[1]],Object):
+            child = self.slots[relative_loc[0],relative_loc[1]]
+            del self.children[child.name]
+            child.parent = None
+            self.slots[relative_loc[0],relative_loc[1]] = object()
         return child
         
     def set_orientation(self, turn_direction):
@@ -126,12 +138,14 @@ class Object():
             for child_name, child in self.children.items():
                 child.put_object_in_grid()
 
-    @property
     def has_children(self, loc=[0,0]):
-        print(self.children)
-
+        relative_loc = loc[0]-self.location[0], loc[1]-self.location[1]
+        
         return False if len(self.children.keys()) == 0 else True
   
+    def local_position(self,loc):
+        return loc[0]-self.location[0], loc[1]-self.location[1]
+        
     @property
     def has_parent(self):
         return not self.parent == None
@@ -156,7 +170,7 @@ class CleanupWorld():
                 objectid=i+1, 
                 location=[i, i],                 
                 properties=obj_list[i])
-            self.map[i:i+obj_list[i]['shape'][0],i:i+obj_list[i]['shape'][0]] = agent
+            self.map[i:i+obj_list[i]['shape'][0],i:i+obj_list[i]['shape'][1]] = agent
             self.world_objects[obj_list[i]['name']] = agent
             
         self.done = True
@@ -208,19 +222,19 @@ class CleanupWorld():
                 self.map[map_loc[0], map_loc[1]] = object()
                 self.update_render(self.world_objects['agent'])
             elif action == 'pick':
-                if not self.world_objects['agent'].has_children:               
+                if not self.world_objects['agent'].has_children():               
                     if isinstance(self.map[new_loc[0], new_loc[1]],Object):
                         # Execute pick action
                         obj_in_front = self.map[new_loc[0], new_loc[1]]
-                        if obj_in_front.has_children:
-                            obj_in_front = obj_in_front.remove_children()
+                        if obj_in_front.has_children(new_loc):
+                            obj_in_front = obj_in_front.remove_children(new_loc)
                         else:
                             if obj_in_front.is_movable:
                                 self.map[new_loc[0], new_loc[1]] = object()  
                             else:
                                 return                          
                         print('adding children')
-                        self.world_objects['agent'].add_children(obj_in_front)
+                        self.world_objects['agent'].add_children(obj_in_front,self.world_objects['agent'].location)
                         self.update_render(self.world_objects['agent'])
                         # self.map[new_loc[0], new_loc[1]] = 0
                 else:
@@ -228,12 +242,14 @@ class CleanupWorld():
                         obj_in_front = self.map[new_loc[0], new_loc[1]]
                         if isinstance(obj_in_front,Object): 
                             if not obj_in_front.is_infertile:
-                                child = self.world_objects['agent'].remove_children()                                
-                                obj_in_front.add_children(child)
+                                child = self.world_objects['agent'].remove_children(self.world_objects['agent'].location)                                
+                                success = obj_in_front.add_children(child,new_loc)
+                                if not success:
+                                    self.world_objects['agent'].add_children(child,self.world_objects['agent'].location)
                             else:
                                 return
                         else:
-                            child = self.world_objects['agent'].remove_children()                        
+                            child = self.world_objects['agent'].remove_children(self.world_objects['agent'].location)                        
                             self.map[new_loc[0], new_loc[1]] = child
                         # del self.world_objects['agent'].children[child.name]
                         child.set_location(new_loc)
