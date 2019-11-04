@@ -66,6 +66,50 @@
         "shape":[1,1]
     },
     {
+        "name": "tv",
+        "path": "./data/tv_2/",
+        "model_name": "Samsung LED TV.obj",
+        "texture_name": "maps/Frame_bump.jpg",
+        "offset_position": [
+            0,
+            0,
+            0
+        ],
+        "offset_orientation": [
+            0,
+            0,
+            0,
+            1
+        ],
+        "scale": 0.1,
+        "is_infertile": true,
+        "surface_offset":1.1,
+        "is_movable":true,
+        "shape":[1,1]
+    },
+    {
+        "name": "couch",
+        "path": "./data/couch_2/",
+        "model_name": "Sofa GM Plutone_OBJ.obj",
+        "texture_name": "Cloth_Sofa GM Plutone_Dif.jpg",
+        "offset_position": [
+            -1.45,
+            0,
+            0.3
+        ],
+        "offset_orientation": [
+            0.7071068,
+            0,
+            0,
+            0.7071068
+        ],
+        "scale": 0.002,
+        "is_infertile": false,
+        "surface_offset":1.1,
+        "is_movable":false,
+        "shape":[4,2]
+    },
+    {
         "name": "book",
         "path": "./data/book/",
         "model_name": "book.obj",
@@ -84,6 +128,73 @@
         "scale": 0.07,
         "is_infertile": true,
         "surface_offset":0,
+        "is_movable":true,
+        "shape":[1,1]
+    },
+
+    {
+        "name": "phone",
+        "path": "./data/phone/",
+        "model_name": "phone.obj",
+        "texture_name": "phone.jpg",
+        "offset_position": [
+            0,
+            0,
+            0
+        ],
+        "offset_orientation": [
+            0,
+            0,
+            0,
+            1
+        ],
+        "scale": 0.03,
+        "is_infertile": true,
+        "surface_offset":1.35,
+        "is_movable":true,
+        "shape":[1,1]
+    },
+    {
+        "name": "laptop",
+        "path": "./data/laptop/",
+        "model_name": "laptop.obj",
+        "texture_name": "laptop.jpg",
+        "offset_position": [
+            0,
+            0,
+            0
+        ],
+        "offset_orientation": [
+            0,
+            0,
+            0,
+            1
+        ],
+        "scale": 0.03,
+        "is_infertile": true,
+        "surface_offset":1.35,
+        "is_movable":true,
+        "shape":[1,1]
+    },
+    {
+        "name": "cupboard",
+        "path": "./data/cupboard/",
+        "model_name": "cupboard.obj",
+        "texture_name": "cupboard.png",
+        "offset_position": [
+            0,
+            0,
+            -0.5
+        ],
+        "offset_orientation": [
+            0.7071068,
+            0,
+            0,
+            0.7071068
+        ],
+        "scale": 0.4,
+        "is_infertile": false,
+        "surface_offset":1.35,
         "is_movable":true,
         "shape":[1,1]
     },
@@ -108,5 +219,27 @@
         "surface_offset":1.1,
         "is_movable":false,
         "shape":[3,2]
+    },
+    {
+        "name": "cup",
+        "path": "./data/cups/",
+        "model_name": "cup.obj",
+        "texture_name": null,
+        "offset_position": [
+            0,
+            0,
+            0
+        ],
+        "offset_orientation": [
+            0,
+            0,
+            0,
+            0
+        ],
+        "scale": 0.3,
+        "is_infertile": true,
+        "surface_offset":1.35,
+        "is_movable":true,
+        "shape":[1,1]
     }
 ]

@@ -4,6 +4,7 @@ import math
 import numpy as np
 import os
 import json
+import copy
 cid = p.connect(p.SHARED_MEMORY)
 if (cid < 0):
     p.connect(p.GUI)
@@ -18,7 +19,8 @@ p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
 p.configureDebugVisualizer(p.COV_ENABLE_GUI, 0)
 # disable tinyrenderer, software (CPU) renderer, we don't use it here
 p.configureDebugVisualizer(p.COV_ENABLE_TINY_RENDERER, 0)
-
+p.resetDebugVisualizerCamera( cameraDistance=10, cameraYaw=0,
+cameraPitch=-50, cameraTargetPosition=[4,4,0])
 
 class Object():
     def __init__(self, world_properties, objectid, properties,facing_direction=0, location=[0,0]):
@@ -158,28 +160,90 @@ class CleanupWorld():
         self.action_space_str = ['forward', 'left', 'right', 'pick']
         self.directions = {'up': 0, 'left': 1, 'down': 2, 'right': 3}
         self.done = False
-        self.world_size = 8
+        self.world_size = 16
         # channel 0 for marking object positions and channel 1 to store orientation/direction
         self.map = np.empty((self.world_size,self.world_size), dtype=object)
         self.world_objects = {}
-        self.world_properties = {'scale': 1, 'size': 8}
+        self.world_properties = {'scale': 1, 'size': self.world_size}
+        objects_available = ['agent','chair','plate','tv','couch','book','phone','laptop', 'cupboard','coffee_table']
+        objects_in_world = {'agent':1,'chair':4,'couch':1,'tv':1,'cupboard':1,'coffee_table':1,'laptop':1}
+        # objects_in_world = {'agent':1,'chair':1}
         with open('objects.json','r') as f:
             obj_list = json.load(f)
-        for i in range(len(obj_list)):
-            agent = Object(world_properties=self.world_properties, 
-                objectid=i+1, 
-                location=[i, i],                 
-                properties=obj_list[i])
-            self.map[i:i+obj_list[i]['shape'][0],i:i+obj_list[i]['shape'][1]] = agent
-            self.world_objects[obj_list[i]['name']] = agent
+        obj_dict = {obj['name']:obj for obj in obj_list}
+        object_count = 0
+        for obj_name,num in objects_in_world.items():
+            for i in range(num):
+                obj_instance = copy.deepcopy(obj_dict[obj_name])
+                if obj_instance['name'] != 'agent':
+                    obj_instance['name'] = obj_instance['name']+"_"+str(i)
+                loc = self.get_suitable_location(obj_instance['shape'])
+                obj = Object(world_properties=self.world_properties, 
+                    objectid=object_count+1, 
+                    location=[loc[0], loc[1]],                 
+                    properties=obj_instance)
+                self.map[loc[0]:loc[0]+obj_instance['shape'][0],loc[1]:loc[1]+obj_instance['shape'][1]] = obj
+                self.world_objects[obj.name] = obj
+                object_count += 1
+                
+        # for i in range(4):
+        #     agent = Object(world_properties=self.world_properties, 
+        #         objectid=i+1, 
+        #         location=[i, i],                 
+        #         properties=obj_list[i])
+        #     self.map[i:i+obj_list[i]['shape'][0],i:i+obj_list[i]['shape'][1]] = agent
+        #     self.world_objects[obj_list[i]['name']] = agent
             
         self.done = True
         self.item_on_hand = None
         self.TIME_LIMIT = max_time_steps
         self.t = 0
+        self.build_the_wall()        
         p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)
         p.setGravity(0, 0, -10)
         p.setRealTimeSimulation(1)
+
+    def get_suitable_location(self, shape):
+        #get int map from obj map
+        int_map = np.zeros_like(self.map,dtype='uint8')
+        kernel = np.ones(shape,dtype='uint8')
+        for i in range(self.map.shape[0]):
+            for j in range(self.map.shape[1]):
+                int_map[i,j] = 1 if isinstance(self.map[i,j],Object) else 0
+        #convolve int_map with kernel
+        conv_out = np.zeros([self.map.shape[0]-kernel.shape[0],self.map.shape[1]-kernel.shape[1]],dtype='int')
+        for i in range(self.map.shape[0]-kernel.shape[0]):
+            for j in range(self.map.shape[1]-kernel.shape[1]):
+                product = int_map[i:i+kernel.shape[0],j:j+kernel.shape[1]]*kernel
+                conv_out[i,j] = np.sum(product)
+        feasable_locations = np.argwhere(conv_out == 0)
+        return feasable_locations[np.random.randint(0,feasable_locations.shape[0]),:]
+        
+    def build_the_wall(self):
+        colBoxId = p.createCollisionShape(p.GEOM_BOX,
+                                  halfExtents=[0.01, self.world_size/2, 3])
+        visualShapeId = p.createVisualShape(p.GEOM_BOX,halfExtents=[0.1, self.world_size/2, 3])
+        bodyUid = p.createMultiBody(baseMass=0,
+                                    baseInertialFramePosition=[0, 0, 0],
+                                    baseCollisionShapeIndex=colBoxId,
+                                    baseVisualShapeIndex=visualShapeId,
+                                    basePosition=[self.world_size-0.5,self.world_size*0.5-0.5,0],
+                                    baseOrientation=[0,0,0,1],
+                                    useMaximalCoordinates=True)
+        bodyUid = p.createMultiBody(baseMass=0,
+                                    baseInertialFramePosition=[0, 0, 0],
+                                    baseCollisionShapeIndex=colBoxId,
+                                    baseVisualShapeIndex=visualShapeId,
+                                    basePosition=[-0.5,self.world_size*0.5-0.5,0],
+                                    baseOrientation=[0,0,0,1],
+                                    useMaximalCoordinates=True)
+        bodyUid = p.createMultiBody(baseMass=0,
+                                    baseInertialFramePosition=[0, 0, 0],
+                                    baseCollisionShapeIndex=colBoxId,
+                                    baseVisualShapeIndex=visualShapeId,
+                                    basePosition=[self.world_size*0.5-0.5,self.world_size-0.5,0],
+                                    baseOrientation=[0,0,0.7071068,0.7071068],
+                                    useMaximalCoordinates=True)
 
     def reset(self):
         self.map = np.zeros([8, 8], dtype='uint8')
