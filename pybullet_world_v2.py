@@ -5,6 +5,7 @@ import numpy as np
 import os
 import json
 import copy
+import pickle as pkl
 cid = p.connect(p.SHARED_MEMORY)
 if (cid < 0):
     p.connect(p.GUI)
@@ -47,7 +48,7 @@ class Object():
     def add_children(self, child,loc):
         assert self.is_infertile == False
         relative_loc = self.local_position(loc)
-        print('relative location', relative_loc)
+        # print('relative location', relative_loc)
         if isinstance(self.slots[relative_loc[0],relative_loc[1]],Object):
             return False
         else:
@@ -77,12 +78,12 @@ class Object():
             self.facing_direction += 1
             if self.facing_direction == 4:
                 self.facing_direction = 0
-        print('facing', self.facing_direction)
+        # print('facing', self.facing_direction)
         angle = np.pi/2*self.facing_direction
         base_angle = p.getEulerFromQuaternion(self.offset_orientation)
         new_angles = [base_angle[0], 0, np.pi+angle]
         quaternion = p.getQuaternionFromEuler(new_angles)
-        if self.has_children:
+        if self.has_children():
             for child_name, child in self.children.items():
                 child.set_orientation(turn_direction)
         self.orientation = quaternion
@@ -135,16 +136,26 @@ class Object():
             height = 0
         p.resetBasePositionAndOrientation(self.objectid, [self.location[0]*self.world_properties['scale']+offset[0], self.location[1]
                                                               * self.world_properties['scale']+offset[1], height+offset[2]], self.orientation)  # place agent in new location
-        if self.has_children:
+        if self.has_children():
             # print(self.children)
             for child_name, child in self.children.items():
                 child.put_object_in_grid()
 
-    def has_children(self, loc=[0,0]):
+    def has_children(self, loc=None):
+        if loc is not None:
+            relative_loc = loc[0]-self.location[0], loc[1]-self.location[1]
+            if isinstance(self.slots[relative_loc[0],relative_loc[1]],Object):
+                return True
+        else:
+            return False if len(self.children.keys()) == 0 else True
+            
+    def get_children(self,loc):
         relative_loc = loc[0]-self.location[0], loc[1]-self.location[1]
-        
-        return False if len(self.children.keys()) == 0 else True
-  
+        if isinstance(self.slots[relative_loc[0],relative_loc[1]],Object):
+            return self.slots[relative_loc[0],relative_loc[1]]
+        else:
+            return None
+            
     def local_position(self,loc):
         return loc[0]-self.location[0], loc[1]-self.location[1]
         
@@ -155,37 +166,83 @@ class Object():
 
 class CleanupWorld():
 
-    def __init__(self, max_time_steps=100, is_goal_env=True):
+    def __init__(self,max_time_steps=100, is_goal_env=True):
 
         self.action_space_str = ['forward', 'left', 'right', 'pick']
         self.directions = {'up': 0, 'left': 1, 'down': 2, 'right': 3}
         self.done = False
-        self.world_size = 16
+        self.world_size = 8
         # channel 0 for marking object positions and channel 1 to store orientation/direction
         self.map = np.empty((self.world_size,self.world_size), dtype=object)
         self.world_objects = {}
         self.world_properties = {'scale': 1, 'size': self.world_size}
         objects_available = ['agent','chair','plate','tv','couch','book','phone','laptop', 'cupboard','coffee_table']
-        objects_in_world = {'agent':1,'chair':4,'couch':1,'tv':1,'cupboard':1,'coffee_table':1,'laptop':1}
-        # objects_in_world = {'agent':1,'chair':1}
+        # objects_in_world = {'agent':1,'chair':4,'couch':1,'tv':1,'cupboard':1,'coffee_table':1,'laptop':1}
+        objects_in_world = {'agent':1}
+        # objects_in_world = {}
         with open('objects.json','r') as f:
             obj_list = json.load(f)
         obj_dict = {obj['name']:obj for obj in obj_list}
+        # num_objects = 10
+        # for i in range(4):
+        #     for obj_name, obj in obj_dict.items():
+        #         prob = obj['probability']
+        #         if np.random.choice([True,False],p=[prob[i], 1-prob[i]]):
+        #             if i == 0 or obj_name in objects_in_world.keys():
+        #                 if obj_name not in objects_in_world.keys():
+        #                     objects_in_world[obj_name] = 1
+        #                 else:
+        #                     objects_in_world[obj_name] += 1    
+        keys = {str(p.B3G_RETURN):'return'}
+        for i in range(len(objects_available)-1):
+            keys[str(i+49)]= objects[i+1]
         object_count = 0
-        for obj_name,num in objects_in_world.items():
-            for i in range(num):
-                obj_instance = copy.deepcopy(obj_dict[obj_name])
-                if obj_instance['name'] != 'agent':
-                    obj_instance['name'] = obj_instance['name']+"_"+str(i)
-                loc = self.get_suitable_location(obj_instance['shape'])
-                obj = Object(world_properties=self.world_properties, 
-                    objectid=object_count+1, 
-                    location=[loc[0], loc[1]],                 
-                    properties=obj_instance)
-                self.map[loc[0]:loc[0]+obj_instance['shape'][0],loc[1]:loc[1]+obj_instance['shape'][1]] = obj
-                self.world_objects[obj.name] = obj
-                object_count += 1
-                
+        p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)
+        obj_instance = copy.deepcopy(obj_dict['agent'])
+        obj_instance['name'] = obj_instance['name']+"_"+str(i)
+        loc = self.get_suitable_location(obj_instance['shape'])
+        obj = Object(world_properties=self.world_properties, 
+            objectid=object_count+1, 
+            location=[loc[0], loc[1]],                 
+            properties=obj_instance)
+        self.map[loc[0]:loc[0]+obj_instance['shape'][0],loc[1]:loc[1]+obj_instance['shape'][1]] = obj
+        self.world_objects['agent'] = obj
+        object_count += 1
+        exit = False
+        # text = p.addUserDebugText("Enter the object ids to add the objects:1-chair 2-plate",
+        #         [-5,0,5],[0,0,0],1.3)
+        for i in range(len(obj_list)-1):
+            print(i+1,obj_list[i+1]['name'])
+        while True and not exit:        
+        # for obj_name,num in objects_in_world.items():            
+            # for i in range(num):
+            keyEvents = p.getKeyboardEvents()
+        # print(keyEvents)
+            if len(keyEvents.keys()) != 0:
+                for k in keyEvents.keys():
+                    if keyEvents[k] == 3:
+                        if str(k) in keys.keys():
+                            if keys[str(k)] == 'return':
+                                exit = True
+                                break
+                            # print(keys[str(k)]+' selected')
+                            print("====================="+keys[str(k)]+' selected'+"======================")
+                            # if keys[str(k)] == 'up':
+                            obj_name = keys[str(k)]
+                            obj_instance = copy.deepcopy(obj_dict[obj_name])
+                            if obj_instance['name'] != 'agent':
+                                obj_instance['name'] = obj_instance['name']+"_"+str(i)
+                            loc = self.get_suitable_location(obj_instance['shape'])
+                            obj = Object(world_properties=self.world_properties, 
+                                objectid=object_count+1, 
+                                location=[loc[0], loc[1]],                 
+                                properties=obj_instance)
+                            self.map[loc[0]:loc[0]+obj_instance['shape'][0],loc[1]:loc[1]+obj_instance['shape'][1]] = obj
+                            self.world_objects[obj.name] = obj
+                            object_count += 1
+                            for i in range(len(obj_list)-1):
+                                print(i+1,obj_list[i+1]['name'])
+                    
         # for i in range(4):
         #     agent = Object(world_properties=self.world_properties, 
         #         objectid=i+1, 
@@ -199,7 +256,6 @@ class CleanupWorld():
         self.TIME_LIMIT = max_time_steps
         self.t = 0
         self.build_the_wall()        
-        p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)
         p.setGravity(0, 0, -10)
         p.setRealTimeSimulation(1)
 
@@ -261,6 +317,15 @@ class CleanupWorld():
     def update_render(self, obj):
         obj.put_object_in_grid()
 
+    def get_observation(self):
+        int_map = np.zeros([self.map.shape[0],self.map.shape[1],2],dtype='uint8')
+        for i in range(self.map.shape[0]):
+            for j in range(self.map.shape[1]):
+                int_map[i,j,0] = self.map[i,j].objectid if isinstance(self.map[i,j],Object) else 0
+                if int_map[i,j,0] != 0:
+                    int_map[i,j,1] = self.map[i,j].get_children([i,j]).objectid if self.map[i,j].has_children([i,j]) else 0
+        return int_map
+        
     def step(self, action):
         map_loc = self.world_objects['agent'].location
         if action == 'forward' or action == 'pick':
@@ -297,7 +362,7 @@ class CleanupWorld():
                                 self.map[new_loc[0], new_loc[1]] = object()  
                             else:
                                 return                          
-                        print('adding children')
+                        # print('adding children')
                         self.world_objects['agent'].add_children(obj_in_front,self.world_objects['agent'].location)
                         self.update_render(self.world_objects['agent'])
                         # self.map[new_loc[0], new_loc[1]] = 0
@@ -310,6 +375,7 @@ class CleanupWorld():
                                 success = obj_in_front.add_children(child,new_loc)
                                 if not success:
                                     self.world_objects['agent'].add_children(child,self.world_objects['agent'].location)
+                                    return
                             else:
                                 return
                         else:
@@ -330,20 +396,62 @@ class CleanupWorld():
 
 
 if __name__ == "__main__":
-    world = CleanupWorld()
+    objects_in_world = {}
+    objects = ['agent','chair','plate','tv','couch','book','phone','laptop', 'cupboard','coffee_table']
     keys = {str(p.B3G_DOWN_ARROW): 'down', str(p.B3G_UP_ARROW): 'up', str(
-        p.B3G_RIGHT_ARROW): 'right', str(p.B3G_LEFT_ARROW): 'left', str(32): 'space'}
-    while(True):
+        p.B3G_RIGHT_ARROW): 'right', str(p.B3G_LEFT_ARROW): 'left', str(32): 'space', str(p.B3G_RETURN):'return'}
+    
+    # exit = False
+    # print("Enter the object ids to add the objects:")
+    # while True:
+    #     x = input("Item:")
+    #     print(x)
+    #     if x == 'q':
+    #         break
+    #     objects_in_world[keys[str(x)]] = 1
+    # while True and not exit:
+    #     keyEvents = p.getKeyboardEvents()
+    #     exit = False
+    #     for k in keyEvents.keys():
+    #         if keyEvents[k] == 3:
+    #             print(keyEvents)
+    #             if str(k) in keys.keys():
+    #                 print(keys[str(k)]+' added')
+    #                 if keys[str(k)] not in objects_in_world:
+    #                     objects_in_world[keys[str(k)]] = 1
+    #                 else:
+    #                     objects_in_world[keys[str(k)]] += 1
+    #                 if keys[str(k)] == 'space':
+    #                     exit = True
+    #                     break
+                    
+    world = CleanupWorld()
+    data = []    
+    exit = False
+    DIR = './collected_data/'
+    num_files=len([name for name in os.listdir(DIR) if os.path.isfile(os.path.join(DIR, name))])    
+    while(True) and not exit:
         keyEvents = p.getKeyboardEvents()
+        # print(keyEvents)
         for k in keyEvents.keys():
             if keyEvents[k] == 3:
                 if str(k) in keys.keys():
-                    print(keys[str(k)]+' pressed')
+                    # print(keys[str(k)]+' pressed')
                     if keys[str(k)] == 'up':
-                        world.step('forward')
+                        action = 'forward'
                     if keys[str(k)] == 'right':
-                        world.step('right')
+                        action = 'right'
                     if keys[str(k)] == 'left':
-                        world.step('left')
+                        action = 'left'
                     if keys[str(k)] == 'space':
-                        world.step('pick')
+                        action = 'pick'
+                    if keys[str(k)] == 'return':
+                        exit = True
+                        break
+                    world.step(action)
+                    data.append({'obs':world.get_observation(),'action':action})
+    print('num_files',num_files)
+    with open('collected_data/eps_'+str(num_files)+'.pkl', 'wb') as f:
+        pkl.dump(data, f)
+    
+    

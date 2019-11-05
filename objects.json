@@ -19,7 +19,8 @@
         "is_infertile": false,
         "surface_offset":1.6,
         "is_movable":true,
-        "shape":[1,1]
+        "shape":[1,1],
+        "probability":[1,0,0,0]
     },
     {
         "name": "chair",
@@ -41,7 +42,8 @@
         "is_infertile": false,
         "surface_offset":0.9,
         "is_movable":true,
-        "shape":[1,1]
+        "shape":[1,1],
+        "probability":[0.8,0.95,0.5,0.90]
     },
     {
         "name": "plate",
@@ -63,7 +65,8 @@
         "is_infertile": true,
         "surface_offset":0,
         "is_movable":true,
-        "shape":[1,1]
+        "shape":[1,1],
+        "probability":[0.5,0.5,0.5,0.5]
     },
     {
         "name": "tv",
@@ -85,7 +88,8 @@
         "is_infertile": true,
         "surface_offset":1.1,
         "is_movable":true,
-        "shape":[1,1]
+        "shape":[1,1],
+        "probability":[0.7,0,0,0]
     },
     {
         "name": "couch",
@@ -107,7 +111,8 @@
         "is_infertile": false,
         "surface_offset":1.1,
         "is_movable":false,
-        "shape":[4,2]
+        "shape":[4,2],
+        "probability":[0.9,0,0,0]
     },
     {
         "name": "book",
@@ -129,7 +134,8 @@
         "is_infertile": true,
         "surface_offset":0,
         "is_movable":true,
-        "shape":[1,1]
+        "shape":[1,1],
+        "probability":[0.5,0.5,0,0]
     },
 
     {
@@ -152,7 +158,8 @@
         "is_infertile": true,
         "surface_offset":1.35,
         "is_movable":true,
-        "shape":[1,1]
+        "shape":[1,1],
+        "probability":[0.5,0,0,0]
     },
     {
         "name": "laptop",
@@ -174,7 +181,8 @@
         "is_infertile": true,
         "surface_offset":1.35,
         "is_movable":true,
-        "shape":[1,1]
+        "shape":[1,1],
+        "probability":[0.5,0,0,0]
     },
     {
         "name": "cupboard",
@@ -196,7 +204,8 @@
         "is_infertile": false,
         "surface_offset":1.35,
         "is_movable":true,
-        "shape":[1,1]
+        "shape":[1,1],
+        "probability":[0.8,0.5,0.5,0.5]
     },
     {
         "name": "coffee_table",
@@ -218,28 +227,7 @@
         "is_infertile": false,
         "surface_offset":1.1,
         "is_movable":false,
-        "shape":[3,2]
-    },
-    {
-        "name": "cup",
-        "path": "./data/cups/",
-        "model_name": "cup.obj",
-        "texture_name": null,
-        "offset_position": [
-            0,
-            0,
-            0
-        ],
-        "offset_orientation": [
-            0,
-            0,
-            0,
-            0
-        ],
-        "scale": 0.3,
-        "is_infertile": true,
-        "surface_offset":1.35,
-        "is_movable":true,
-        "shape":[1,1]
+        "shape":[3,2],
+        "probability":[0.5,0,0,0]
     }
 ]
