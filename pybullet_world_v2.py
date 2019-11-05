@@ -233,15 +233,16 @@ class CleanupWorld():
                             if obj_instance['name'] != 'agent':
                                 obj_instance['name'] = obj_instance['name']+"_"+str(i)
                             loc = self.get_suitable_location(obj_instance['shape'])
-                            obj = Object(world_properties=self.world_properties, 
-                                objectid=object_count+1, 
-                                location=[loc[0], loc[1]],                 
-                                properties=obj_instance)
-                            self.map[loc[0]:loc[0]+obj_instance['shape'][0],loc[1]:loc[1]+obj_instance['shape'][1]] = obj
-                            self.world_objects[obj.name] = obj
-                            object_count += 1
-                            for i in range(len(obj_list)-1):
-                                print(i+1,obj_list[i+1]['name'])
+                            if loc is not None:
+                                obj = Object(world_properties=self.world_properties, 
+                                    objectid=object_count+1, 
+                                    location=[loc[0], loc[1]],                 
+                                    properties=obj_instance)
+                                self.map[loc[0]:loc[0]+obj_instance['shape'][0],loc[1]:loc[1]+obj_instance['shape'][1]] = obj
+                                self.world_objects[obj.name] = obj
+                                object_count += 1
+                                for i in range(len(obj_list)-1):
+                                    print(i+1,obj_list[i+1]['name'])
                     
         # for i in range(4):
         #     agent = Object(world_properties=self.world_properties, 
@@ -273,6 +274,9 @@ class CleanupWorld():
                 product = int_map[i:i+kernel.shape[0],j:j+kernel.shape[1]]*kernel
                 conv_out[i,j] = np.sum(product)
         feasable_locations = np.argwhere(conv_out == 0)
+        if len(feasable_locations) == 0:
+            print("cannot add more objects")
+            return None
         return feasable_locations[np.random.randint(0,feasable_locations.shape[0]),:]
         
     def build_the_wall(self):
@@ -429,7 +433,12 @@ if __name__ == "__main__":
     data = []    
     exit = False
     DIR = './collected_data/'
-    num_files=len([name for name in os.listdir(DIR) if os.path.isfile(os.path.join(DIR, name))])    
+    try:
+        num_files=len([name for name in os.listdir(DIR) if os.path.isfile(os.path.join(DIR, name))])    
+    except:
+        os.mkdir('./collected_data')
+        num_files=len([name for name in os.listdir(DIR) if os.path.isfile(os.path.join(DIR, name))])    
+        
     while(True) and not exit:
         keyEvents = p.getKeyboardEvents()
         # print(keyEvents)
