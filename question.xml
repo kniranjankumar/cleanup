@@ -1,0 +1,110 @@
+<HTMLQuestion xmlns="http://mechanicalturk.amazonaws.com/AWSMechanicalTurkDataSchemas/2011-11-11/HTMLQuestion.xsd">
+  <HTMLContent><![CDATA[
+<!DOCTYPE html>
+<html>
+ <head>
+  <meta http-equiv='Content-Type' content='text/html; charset=UTF-8'/>
+  <script type='text/javascript' src='https://s3.amazonaws.com/mturk-public/externalHIT_v1.js'></script>
+    <style>
+    body { margin: 30; }
+    canvas { width: 30%; height: 30% }
+  </style>
+  <script src="https://preview.babylonjs.com/babylon.js"></script>
+        <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+        <script src="https://preview.babylonjs.com/loaders/babylon.objFileLoader.js"></script>
+	<script src="https://code.jquery.com/pep/0.4.3/pep.js"></script>
+ </head>
+ <body>
+  <form name='mturk_form' method='post' id='mturk_form' action='https://www.mturk.com/mturk/externalSubmit'>
+  <input type='hidden' value='' name='assignmentId' id='assignmentId'/>
+  <h1>This is a test question</h1>
+	<canvas id="renderCanvas" touch-action="none"></canvas> //touch-action="none" for best results from PEP
+
+    <script>
+        var canvas = document.getElementById("renderCanvas"); // Get the canvas element 
+        var engine = new BABYLON.Engine(canvas, true); // Generate the BABYLON 3D engine
+
+        /******* Add the create scene function ******/
+        var createScene = function () {
+
+
+        var scene = new BABYLON.Scene(engine);
+
+        // camera
+        var camera = new BABYLON.ArcRotateCamera("camera1", 0, 0, 00, new BABYLON.Vector3(0, 0, 0), scene);
+        camera.setPosition(new BABYLON.Vector3(0, 3.5, -10));
+        camera.attachControl(canvas, true);
+
+        // lights
+        var light1 = new BABYLON.DirectionalLight("light1", new BABYLON.Vector3(1, 2, 0), scene);
+        var light2 = new BABYLON.HemisphericLight("light2", new BABYLON.Vector3(0, 1, 0), scene);
+        light2.intensity = 0.75;
+
+        // var sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {}, scene);
+ var ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 6, height: 6}, scene);
+        mesh = BABYLON.SceneLoader.Append("https://raw.githubusercontent.com/kniranjankumar/babylonjstest/master/models/","model_normalized.obj", scene, function (scene) {
+            // do something with the scene
+        });
+        /****************************Key Control Multiple Keys************************************************/
+
+        var map = {}; //object for multiple key presses
+        scene.actionManager = new BABYLON.ActionManager(scene);
+
+        scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, function (evt) {
+            map[evt.sourceEvent.key] = evt.sourceEvent.type == "keydown";
+
+        }));
+
+        scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, function (evt) {
+            map[evt.sourceEvent.key] = evt.sourceEvent.type == "keydown";
+        }));
+
+
+
+        scene.registerAfterRender(function () {
+
+            if ((map["w"] || map["W"])) {
+                mesh.position.z += 0.1;
+            };
+
+            if ((map["z"] || map["Z"])) {
+                mesh.position.z -= 0.1;
+            };
+
+            if ((map["a"] || map["A"])) {
+                mesh.position.x -= 0.1;
+            };
+
+            if ((map["s"] || map["S"])) {
+                mesh.position.x += 0.1;
+            };
+
+        });
+    /******* End of the create scene function ******/    
+        return scene;
+
+        };
+        var scene = createScene(); //Call the createScene function
+
+        // BABYLON.SceneLoader.Append("./","model_normalized.obj", scene, function (scene) {
+        //     // do something with the scene
+        // });
+        // Register a render loop to repeatedly render the scene
+        engine.runRenderLoop(function () { 
+                scene.render();
+        });
+
+        // Watch for browser/canvas resize events
+        window.addEventListener("resize", function () { 
+                engine.resize();
+        });
+    </script>
+  <p><input type='submit' id='submitButton' value='Submit' /></p></form>
+  <script language='Javascript'>turkSetAssignmentID();</script>
+  
+ </body>
+</html>
+]]>
+  </HTMLContent>
+  <FrameHeight>450</FrameHeight>
+</HTMLQuestion>
