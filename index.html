@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<title>BabylonJs Demo</title>
+		<script src="https://cdn.babylonjs.com/babylon.max.js"></script>
+		<script src="babylon.js"></script>
+		<script src="babylon.objFileLoader.js"></script>
+		<style>
+			#canvas{
+				width:100%;
+				height:100%;
+			}			
+		</style>
+	</head>
+	<body>
+		<canvas id="canvas"></canvas>	
+		<!--This is where the simulation script exists-->
+		<script >
+			window.addEventListener("DOMContentLoaded", function() {
+				var canvas = document.getElementById("canvas");
+				var engine = new BABYLON.Engine(canvas,true);
+				engine.enableOfflineSupport = false;
+
+				var createScene = function(){
+					var scene = new BABYLON.Scene(engine);
+					scene.clearColor = new BABYLON.Color3.White();
+					var camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0,6,-10),scene);
+					camera.setTarget(BABYLON.Vector3.Zero());
+					BABYLON.OBJFileLoader.OPTIMIZE_WITH_UV = true;
+					BABYLON.SceneLoader.ImportMesh("book", "/home/nithin/Desktop/webgl_tutorials/book/", "book.obj", scene, function(object) {
+						object.scaling = new BABYLON.Vector3(0.9, 0.9, 0.9);
+					});
+					return scene;
+				}
+
+				var scene = createScene();
+				engine.runRenderLoop(function(){
+					scene.render(); 
+				});
+			});
+		</script>
+	</body>
+</html>	
