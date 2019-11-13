@@ -114,7 +114,7 @@ class CleanupWorld(gym.Env):
         right = x, y+1
         neighbours = {'up': up, 'down': down, 'left': left, 'right': right}
         #         [print(v) for k,v in neighbours.items()]
-        neighbours = {k: v for k, v in neighbours.items() if v[0] >= 0 and v[0] < 4 and v[1] >= 0 and v[1] < 4}
+        neighbours = {k: v for k, v in neighbours.items() if v[0] >= 0 and v[0] < self.map.shape[0] and v[1] >= 0 and v[1] < self.map.shape[1]}
         if see_objects:
             neighbours = {k: v for k, v in neighbours.items() if self.map[v[0],v[1]] == 0}
         return neighbours
@@ -194,8 +194,11 @@ class CleanupWorld(gym.Env):
             # else:
             #     # print(apple_loc)
             #     apple_loc = apple_loc[0] * 8 + apple_loc[1]
+            temp = np.copy(self.map)
+            temp[self.agent_location[0],self.agent_location[1]]=0
+            
             return {'observation':self.map.reshape(-1)/9-0.5,
-                    'achieved_goal':self.map.reshape(-1)/9-0.5,
+                    'achieved_goal':temp.reshape(-1)/9-0.5,
                     'desired_goal':self.goal_map.reshape(-1)/9-0.5}
         return self.map.reshape(-1)/9-0.5
         # return self.render(mode='rgb_array')
@@ -223,26 +226,26 @@ class CleanupWorld(gym.Env):
         if diff < 0.01 and not picked_up:
             diff += 8
         return -diff/8
-# if __name__ == '__main__':
-#      env = CleanupWorld()
-#      obs = env.reset()
-#      # obs, rew, done = env.step('right')
-#      # obs, rew, done = env.step('forward')
-#      # obs, rew, done = env.step('right')
-#      # obs, rew, done = env.step('pick')
-#
-#
-#
-#      for i in range(1000):
-#          print(i)
-#          action = env.action_space.sample()
-#          obs, rew, done,_ = env.step(action)
-#          env.render()
-#          if done:
-#              env.reset()
-#          env.difference()
-#          print(rew)
-#          # cv2.imwrite('env_gif/img_'+str(i).zfill(3)+'.png',obs['observed'])
-#          env.render(mode='human')
-#          # cv2.imshow('win', obs)
-#          cv2.waitKey(100)
+if __name__ == '__main__':
+     env = CleanupWorld()
+     obs = env.reset()
+     # obs, rew, done = env.step('right')
+     # obs, rew, done = env.step('forward')
+     # obs, rew, done = env.step('right')
+     # obs, rew, done = env.step('pick')
+
+
+
+     for i in range(1000):
+         print(i)
+         action = env.action_space.sample()%2
+         obs, rew, done,_ = env.step(action)
+         env.render()
+         if done:
+             env.reset()
+         env.difference()
+         print(rew)
+         # cv2.imwrite('env_gif/img_'+str(i).zfill(3)+'.png',obs['observed'])
+         env.render(mode='human')
+         # cv2.imshow('win', obs)
+         cv2.waitKey(100)
