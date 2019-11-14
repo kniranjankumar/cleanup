@@ -183,6 +183,7 @@ class CleanupWorld(gym.Env):
         elif self.t == self.TIME_LIMIT:
             self.done = True
             self.t = 0
+        rew = self.compute_reward(obs['achieved_goal'],obs['desired_goal'], None)
         return obs, rew, self.done, {}
 
     def get_obs(self):
@@ -200,6 +201,7 @@ class CleanupWorld(gym.Env):
             return {'observation':self.map.reshape(-1)/9-0.5,
                     'achieved_goal':temp.reshape(-1)/9-0.5,
                     'desired_goal':self.goal_map.reshape(-1)/9-0.5}
+                    
         return self.map.reshape(-1)/9-0.5
         # return self.render(mode='rgb_array')
     def compute_reward(self, achieved_goal, desired_goal, info):
@@ -227,7 +229,7 @@ class CleanupWorld(gym.Env):
             diff += 8
         return -diff/8
 if __name__ == '__main__':
-     env = CleanupWorld()
+     env = CleanupWorld(max_time_steps=1000)
      obs = env.reset()
      # obs, rew, done = env.step('right')
      # obs, rew, done = env.step('forward')
@@ -237,8 +239,8 @@ if __name__ == '__main__':
 
 
      for i in range(1000):
-         print(i)
-         action = env.action_space.sample()%2
+        #  print(i)
+         action = env.action_space.sample()
          obs, rew, done,_ = env.step(action)
          env.render()
          if done:
