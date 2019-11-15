@@ -18,7 +18,7 @@ env = gym.make('2DCleanup-v0')
 
 goal_selection_strategy = 'future'
 model = HER('MlpPolicy', env, DQN, n_sampled_goal=4, goal_selection_strategy=goal_selection_strategy,
-                                                verbose=1)
+                                                verbose=1, exploration_fraction=0.5)
 print('learning')
 model.learn(total_timesteps=1000000, tb_log_name='/srv/share/nkannabiran3/DQN_HER/')
 model.save("deepq_her__cartpole")
