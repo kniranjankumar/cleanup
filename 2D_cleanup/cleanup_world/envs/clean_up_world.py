@@ -176,15 +176,12 @@ class CleanupWorld(gym.Env):
         obs = self.get_obs()
         diff = self.difference()
         # rew = 1-diff/4
-        if self.goal_map[self.apple_loc] == self.map[self.apple_loc]:
-            rew = 1
+        rew = self.compute_reward(obs['achieved_goal'],obs['desired_goal'], None)
 
-        if rew == 1:
-            self.done = True
-        elif self.t == self.TIME_LIMIT:
+
+        if self.t == self.TIME_LIMIT:
             self.done = True
             self.t = 0
-        rew = self.compute_reward(obs['achieved_goal'],obs['desired_goal'], None)
         return obs, rew, self.done, {}
 
     def get_obs(self):
