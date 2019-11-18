@@ -1,5 +1,6 @@
 import gym
 import cleanup_world
+import os
 # from baselines import deepq
 # import tensorflow as tf
 from stable_baselines import HER, DQN
@@ -35,6 +36,7 @@ else:
             prioritized_replay_alpha=0.8,
             prioritized_replay_beta0=0.2)
 print('learning')
+os.mkdir(args.tensorboard_log_path+'/'+args.name)
 parser.save_args()
 model.learn(total_timesteps=args.num_training_steps, tb_log_name=args.tensorboard_log_path+'/'+args.name)
 model.save(args.name)
