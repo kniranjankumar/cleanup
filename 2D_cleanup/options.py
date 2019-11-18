@@ -23,7 +23,6 @@ class Parser:
 
         # if data:
         #     return self.parser.parse_args(data)
-
         self.args = self.parser.parse_args()
         print(self.args)
         return self.args

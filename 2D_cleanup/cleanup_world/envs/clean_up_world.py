@@ -53,6 +53,7 @@ class CleanupWorld(gym.Env):
     def reset(self):
         # print('reset')
         self.map *= 0
+        self.goal_map*= 0
         if self.agent_location is not None:
             self.map[self.agent_location[0], self.agent_location[1]] = 0
         self.agent_location = [0, 0]
@@ -228,6 +229,7 @@ class CleanupWorld(gym.Env):
         if diff < 0.01 and not picked_up:
             diff += 8
         return -diff/8
+        
 if __name__ == '__main__':
      env = CleanupWorld(max_time_steps=1000)
      obs = env.reset()
