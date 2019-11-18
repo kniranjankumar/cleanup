@@ -3,10 +3,14 @@ import cleanup_world
 # from baselines import deepq
 # import tensorflow as tf
 from stable_baselines import HER, DQN
+from options import Parser
 from stable_baselines.her import GoalSelectionStrategy, HERGoalEnvWrapper
 # from stable_baselines.common.vec_env import DummyVecEnv
-# from stable_baselines.deepq.policies import MlpPolicy
+from stable_baselines.deepq.policies import MlpPolicy
 # from stable_baselines import DQN
+parser = Parser()
+args = parser.parse()
+# print(vars(args))
 env = gym.make('2DCleanup-v0')
 # env = gym.make('CartPole-v1')
 # env = DummyVecEnv()
@@ -15,13 +19,26 @@ env = gym.make('2DCleanup-v0')
 #             prioritized_replay=True,
 #             prioritized_replay_alpha=0.8,
 #             prioritized_replay_beta0=0.2)
-
-goal_selection_strategy = 'future'
-model = HER('MlpPolicy', env, DQN, n_sampled_goal=4, goal_selection_strategy=goal_selection_strategy,
-                                                verbose=1, exploration_fraction=0.5, tensorboard_log='/srv/share/nkannabiran3/DQN_HER')
+if args.enable_HER:
+    model = HER('MlpPolicy', 
+                env, 
+                DQN, 
+                n_sampled_goal=args.num_sampled_goals, 
+                goal_selection_strategy=args.goal_selection_strategy,
+                verbose=1, 
+                exploration_fraction=args.exploration_fraction, 
+                tensorboard_log=args.tensorboard_log_path+'/'+args.name)
+else:
+    model = DQN(MlpPolicy, env, verbose=1,tensorboard_log='/srv/share/nkannabiran3/DQN/',
+            double_q=True,
+            prioritized_replay=True,
+            prioritized_replay_alpha=0.8,
+            prioritized_replay_beta0=0.2)
 print('learning')
-model.learn(total_timesteps=1000000, tb_log_name='/srv/share/nkannabiran3/DQN_HER')
-model.save("deepq_her_cartpole")
+parser.save_args()
+model.learn(total_timesteps=args.num_training_steps, tb_log_name=args.tensorboard_log_path+'/'+args.name)
+model.save(args.name)
+
 
 # del model # remove to demonstrate saving and loading
 
@@ -34,18 +51,3 @@ while True:
     if dones:
         break
     # env.render()
-# from baselines.baselines.common.models import mlp
-# env = gym.make('2DCleanup-v0')
-# env = gym.make('CartPole-v0')
-# with tf.device('/GPU:0'):
-#         act = deepq.learn(
-#                 env,
-#                 network='mlp',
-#                 lr=1e-3,
-#                 total_timesteps=100000,
-#                 buffer_size=10000,
-#                 exploration_fraction=0.1,
-#                 exploration_final_eps=0.02,
-#                 print_freq=1,
-#                 gamma=0.98,
-#                 prioritized_replay=True)
