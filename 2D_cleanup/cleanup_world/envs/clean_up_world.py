@@ -195,6 +195,8 @@ class CleanupWorld(gym.Env):
             #     apple_loc = apple_loc[0] * 8 + apple_loc[1]
             temp = np.copy(self.map)
             temp[self.agent_location[0],self.agent_location[1]]=0
+            if self.purse is not None:
+                temp[self.agent_location[0],self.agent_location[1]] = self.purse
             
             return {'observation':self.map.reshape(-1)/9-0.5,
                     'achieved_goal':temp.reshape(-1)/9-0.5,
@@ -223,8 +225,8 @@ class CleanupWorld(gym.Env):
             apple_goal = apple_goal[0, :]
         # print(apple_loc,apple_goal)
         diff = np.linalg.norm(np.array(apple_loc)-np.array(apple_goal))
-        if diff < 0.01 and not picked_up:
-            diff = -8
+        # if diff < 0.01 and not picked_up:
+        #     diff = -8
         return -diff/8
         
 if __name__ == '__main__':
