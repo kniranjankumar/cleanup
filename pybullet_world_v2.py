@@ -232,7 +232,14 @@ class CleanupWorld():
                             obj_instance = copy.deepcopy(obj_dict[obj_name])
                             if obj_instance['name'] != 'agent':
                                 obj_instance['name'] = obj_instance['name']+"_"+str(i)
-                            loc = self.get_suitable_location(obj_instance['shape'])
+                            if obj_name == 'couch':
+                                print("here")
+                                x=input('Enter x coordinate:')
+                                y=input('Enter y coordinate:')
+                                loc = [int(x),int(y)]
+                            else:
+                                loc = self.get_suitable_location(obj_instance['shape'])
+                            print(loc)    
                             if loc is not None:
                                 obj = Object(world_properties=self.world_properties, 
                                     objectid=object_count+1, 
