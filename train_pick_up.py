@@ -12,8 +12,8 @@ from stable_baselines.deepq.policies import MlpPolicy
 # print(vars(args))
 env = gym.make('2DPickup-v0')
 model = DQN(MlpPolicy, env, verbose=1,tensorboard_log='/srv/share/nkannabiran3/DQN/',
-            double_q=True)#,
-            # prioritized_replay=True,
+            double_q=True,
+            prioritized_replay=True)#,
             # prioritized_replay_alpha=0.8,
             # prioritized_replay_beta0=0.2)
 model.learn(total_timesteps=100000)
