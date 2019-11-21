@@ -139,7 +139,6 @@ class PickupWorld(gym.Env):
         obs = self.get_obs()
         if self.t == self.TIME_LIMIT:
             self.done = True
-            self.t = 0
         return obs, rew, self.done, {}
 
     @property
