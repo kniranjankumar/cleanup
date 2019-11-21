@@ -7,8 +7,8 @@ from options import Parser
 # from stable_baselines.common.vec_env import DummyVecEnv
 from stable_baselines.deepq.policies import MlpPolicy
 # from stable_baselines import DQN
-parser = Parser()
-args = parser.parse()
+# parser = Parser()
+# args = parser.parse()
 # print(vars(args))
 env = gym.make('2DPickup-v0')
 model = DQN(MlpPolicy, env, verbose=1,tensorboard_log='/srv/share/nkannabiran3/DQN/',
