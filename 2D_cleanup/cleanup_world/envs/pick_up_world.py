@@ -40,7 +40,7 @@ class PickupWorld(gym.Env):
         self.add_to_world('agent', [0, 0])
         self.add_to_world('object', [5,5])
         self.TIME_LIMIT = max_time_steps
-        self.action_space = Discrete(3)
+        self.action_space = Discrete(4)
         self._seed()
         self.done = True
         self.is_vectorized = is_vectorized
