@@ -1,1 +1,2 @@
 from cleanup_world.envs.clean_up_world import CleanupWorld
+from cleanup_world.envs.pick_up_world import PickupWorld
