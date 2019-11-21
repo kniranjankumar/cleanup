@@ -126,7 +126,7 @@ class PickupWorld(gym.Env):
                 move_to = possible_actions[self.items['agent'].direction]
                 self.update_location('agent', move_to)
         elif action == 'pick':
-            print('here')
+            # print('here')
             possible_actions = self.get_neighbors(
                 agent_location,see_objects=False)
             if self.items['agent'].direction in possible_actions.keys():
