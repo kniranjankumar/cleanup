@@ -5,13 +5,13 @@ from stable_baselines import HER, DQN
 from options import Parser
 # from stable_baselines.her import GoalSelectionStrategy, HERGoalEnvWrapper
 # from stable_baselines.common.vec_env import DummyVecEnv
-from stable_baselines.deepq.policies import CnnPolicy
+from stable_baselines.deepq.policies import MlpPolicy
 # from stable_baselines import DQN
 # parser = Parser()
 # args = parser.parse()
 # print(vars(args))
 env = gym.make('2DPickup-v0')
-model = DQN(CnnPolicy, env, verbose=1,tensorboard_log='/srv/share/nkannabiran3/DQN/',
+model = DQN(MlpPolicy, env, verbose=1,tensorboard_log='/srv/share/nkannabiran3/DQN/',
             double_q=True,
             prioritized_replay=True,
             prioritized_replay_alpha=0.8,

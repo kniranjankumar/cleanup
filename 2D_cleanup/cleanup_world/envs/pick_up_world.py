@@ -149,11 +149,11 @@ class PickupWorld(gym.Env):
         for k,v in self.items.items():
             position[v.loc[0],v.loc[1]] = self.str2objID(k)
             orientation[v.loc[0],v.loc[1]] = DIRECTIONS[v.direction]
-        mat = np.stack([position/len(self.object_list),orientation/3,np.zeros_like(self.map,dtype='float')],axis=2)
+        mat = np.stack([position/len(self.object_list),orientation/3],axis=2)
         return mat
 
     def get_obs(self):
-        return self.map_array
+        return self.map_array.reshape(-1) if self.is_vectorized else self.map_array
 
 
 if __name__ == '__main__':
