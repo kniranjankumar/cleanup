@@ -49,7 +49,7 @@ class PickupWorld(gym.Env):
                 [self.world_size*self.world_size*2]), low=-1*np.ones([self.world_size*self.world_size*2]), dtype='float')
         else:
             self.observation_space = Box(high=np.zeros(
-                [self.world_size, self.world_size,3]), low=-1*np.ones([self.world_size, self.world_size,3]), dtype='float')
+                [self.world_size, self.world_size,2]), low=-1*np.ones([self.world_size, self.world_size,2]), dtype='float')
 
     def update_location(self, item_name, new_loc):
         item = self.items[item_name]
