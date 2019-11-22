@@ -32,7 +32,7 @@ class WorldObject(object):
 
 class PickupWorld(gym.Env):
 
-    def __init__(self, max_time_steps=100, is_goal_env=True, is_vectorized=True):
+    def __init__(self, max_time_steps=100, is_goal_env=True, is_vectorized=False):
         self.world_size = 8
         self.map = np.empty((self.world_size, self.world_size), dtype=object)
         self.items = {}
