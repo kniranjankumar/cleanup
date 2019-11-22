@@ -45,10 +45,10 @@ class PickupWorld(gym.Env):
         self.done = True
         self.is_vectorized = is_vectorized
         if is_vectorized:
-            self.observation_space = Box(high=np.zeros(
+            self.observation_space = Box(high=np.ones(
                 [self.world_size*self.world_size*2]), low=-1*np.ones([self.world_size*self.world_size*2]), dtype='float')
         else:
-            self.observation_space = Box(high=np.zeros(
+            self.observation_space = Box(high=np.ones(
                 [self.world_size, self.world_size,2]), low=-1*np.ones([self.world_size, self.world_size,2]), dtype='float')
 
     def update_location(self, item_name, new_loc):
@@ -148,8 +148,8 @@ class PickupWorld(gym.Env):
         for k,v in self.items.items():
             position[v.loc[0],v.loc[1]] = self.str2objID(k)
             orientation[v.loc[0],v.loc[1]] = DIRECTIONS[v.direction]
-        mat = np.stack([position/len(self.object_list),orientation/3],axis=2)
-        return mat
+        mat = np.stack([position/len(self.object_list),orientation/3],axis=2)-0.5
+        return mat*2
 
     def get_obs(self):
         return self.map_array.reshape(-1) if self.is_vectorized else self.map_array
