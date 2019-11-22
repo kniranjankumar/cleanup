@@ -91,7 +91,7 @@ model = DQN(PickupCnnPolicy,
             prioritized_replay_eps=args.prioritized_replay_eps,
             param_noise=args.param_noise)
 
-model.learn(total_timesteps=100000)
+model.learn(total_timesteps=args.total_timesteps)
 
 
 obs = env.reset()
