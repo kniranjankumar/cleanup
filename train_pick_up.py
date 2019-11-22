@@ -11,7 +11,9 @@ import numpy as np
 from stable_baselines.common.policies import FeedForwardPolicy, register_policy, nature_cnn
 from stable_baselines.a2c.utils import conv, linear, conv_to_fc, batch_to_seq, seq_to_batch, lstm
 from stable_baselines.deepq.policies import FeedForwardPolicy
-
+from options import Parser
+parser = Parser("DQN")
+args = parser.parse()
 def custom_cnn(scaled_images, **kwargs):
     """
     CNN from Nature paper.
@@ -52,11 +54,43 @@ class PickupCnnPolicy(FeedForwardPolicy):
 
 
 env = gym.make('2DPickup-v0')
-model = DQN(PickupCnnPolicy, env, verbose=1,tensorboard_log='/srv/share/nkannabiran3/DQN/',
-            double_q=True)
-            # prioritized_replay=True),
-            # prioritized_replay_alpha=0.8,
-            # prioritized_replay_beta0=0.2)
+# gamma=0.99
+# learning_rate=5e-4
+# buffer_size=50000
+# exploration_fraction=0.1
+# exploration_final_eps=0.02
+# train_freq=1
+# batch_size=32
+# double_q=True
+# learning_starts=1000
+# target_network_update_freq=500
+# prioritized_replay=False
+# prioritized_replay_alpha=0.6
+# prioritized_replay_beta0=0.4
+# prioritized_replay_beta_iters=None
+# prioritized_replay_eps=1e-6
+# param_noise=False
+# n_cpu_tf_sess=None
+# verbose=0
+
+model = DQN(PickupCnnPolicy, 
+            env, 
+            verbose=1,
+            tensorboard_log='/srv/share/nkannabiran3/DQN/',
+            double_q=args.double_q,
+            gamma=args.gamma,
+            exploration_final_eps=args.exploration_final_eps,
+            train_freq=args.train_freq,
+            batch_size=args.batch_size,
+            learning_starts=args.learning_starts,
+            target_network_update_freq=args.target_network_update_freq,
+            prioritized_replay=args.prioritized_replay,
+            prioritized_replay_alpha=args.prioritized_replay_alpha,
+            prioritized_replay_beta0=args.prioritized_replay_beta0,
+            prioritized_replay_beta_iters=args.prioritized_replay_beta_iters,
+            prioritized_replay_eps=args.prioritized_replay_eps,
+            param_noise=args.param_noise)
+
 model.learn(total_timesteps=100000)
 
 
