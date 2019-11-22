@@ -37,6 +37,7 @@ class Parser:
             parser.add_argument("--n_cpu_tf_sess", type=int, required=False,default=None)
             parser.add_argument("--verbose", type=int, required=False,default=0)
             parser.add_argument("--num_learning_steps", type=int, required=False,default=1000000)
+            parser.add_argument("--tensorboard_log_name",type=str,required=False,default="DQN")
         self.parser = parser
         self.args = None
     def parse(self, data=None):
