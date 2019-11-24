@@ -42,6 +42,7 @@ class Parser:
             parser.add_argument("--gamma", type=float,required=False, default=0.99)
             parser.add_argument("--learning_rate", type=float,required=False,default=0.0007)
             parser.add_argument("--verbose", type=int, required=False,default=0)
+            parser.add_argument("--tensorboard_log_name",type=str,required=False,default="A2C")
             
         self.parser = parser
         self.args = None
