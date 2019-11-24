@@ -101,7 +101,8 @@ elif model_type == 'A2C':
                 verbose=args.verbose,
                 tensorboard_log='/srv/share/nkannabiran3/A2C/',
                 gamma=args.gamma,
-                learning_rate=args.learning_rate)
+                learning_rate=args.learning_rate,
+                lr_schedule=args.lr_schedule)
     
     
 model.learn(total_timesteps=args.num_learning_steps,tb_log_name=args.tensorboard_log_name)
