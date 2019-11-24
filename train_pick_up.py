@@ -79,7 +79,7 @@ if model_type == 'DQN':
                 param_noise=args.param_noise,
                 learning_rate=args.learning_rate)
 elif model_type == 'A2C':
-    env = SubprocVecEnv([lambda: gym.make('2DPickup-v0') for i in range(4)])
+    env = DummyVecEnv([lambda: gym.make('2DPickup-v0') for i in range(4)])
     model = A2C(PickupCnnPolicy, 
                 env, 
                 verbose=args.verbose,
