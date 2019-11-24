@@ -7,7 +7,7 @@ import tensorflow as tf
 import tensorflow.contrib.layers as tf_layers
 import numpy as np
 # from stable_baselines.her import GoalSelectionStrategy, HERGoalEnvWrapper
-# from stable_baselines.common.vec_env import DummyVecEnv
+from stable_baselines.common.vec_env import DummyVecEnv, SubprocVecEnv
 from stable_baselines.common.policies import FeedForwardPolicy, register_policy, nature_cnn
 from stable_baselines.a2c.utils import conv, linear, conv_to_fc, batch_to_seq, seq_to_batch, lstm
 from stable_baselines.deepq.policies import FeedForwardPolicy
@@ -52,7 +52,6 @@ class PickupCnnPolicy(FeedForwardPolicy):
                                         layer_norm=False, **_kwargs)
 
 
-env = gym.make('2DPickup-v0')
 
 model_types = ['DQN', 'A2C']
 
@@ -60,6 +59,7 @@ model_type = model_types[1]
 parser = Parser(model_type)
 args = parser.parse()
 if model_type == 'DQN':
+    env = gym.make('2DPickup-v0')
     model = DQN(PickupCnnPolicy, 
                 env, 
                 verbose=1,
@@ -79,6 +79,7 @@ if model_type == 'DQN':
                 param_noise=args.param_noise,
                 learning_rate=args.learning_rate)
 elif model_type == 'A2C':
+    env = SubprocVecEnv([lambda: gym.make('2DPickup-v0') for i in range(4)])
     model = A2C(PickupCnnPolicy, 
                 env, 
                 verbose=args.verbose,
