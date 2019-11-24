@@ -10,7 +10,7 @@ import numpy as np
 from stable_baselines.common.vec_env import DummyVecEnv, SubprocVecEnv
 from stable_baselines.common.policies import FeedForwardPolicy, register_policy, nature_cnn
 from stable_baselines.a2c.utils import conv, linear, conv_to_fc, batch_to_seq, seq_to_batch, lstm
-from stable_baselines.deepq.policies import FeedForwardPolicy
+from stable_baselines.deepq.policies import FeedForwardPolicy as FeedForwardPolicy_DQN
 from options import Parser
 
 def custom_cnn(scaled_images, **kwargs):
@@ -28,7 +28,7 @@ def custom_cnn(scaled_images, **kwargs):
     layer_3 = conv_to_fc(layer_2)
     return activ(linear(layer_3, 'fc1', n_hidden=512))
     
-class PickupCnnPolicy(FeedForwardPolicy):
+class PickupCnnPolicyDQN(FeedForwardPolicy_DQN):
     """
     Policy object that implements DQN policy, using a CNN (the nature CNN)
 
@@ -47,10 +47,26 @@ class PickupCnnPolicy(FeedForwardPolicy):
 
     def __init__(self, sess, ob_space, ac_space, n_env, n_steps, n_batch,
                  reuse=False, obs_phs=None, dueling=True, **_kwargs):
-        super(PickupCnnPolicy, self).__init__(sess, ob_space, ac_space, n_env, n_steps, n_batch, reuse,
+        super(PickupCnnPolicyDQN, self).__init__(sess, ob_space, ac_space, n_env, n_steps, n_batch, reuse,
                                         feature_extraction="cnn", obs_phs=obs_phs, dueling=dueling, cnn_extractor=custom_cnn,
                                         layer_norm=False, **_kwargs)
+class CnnPolicyA2C(FeedForwardPolicy):
+    """
+    Policy object that implements actor critic, using a CNN (the nature CNN)
 
+    :param sess: (TensorFlow session) The current TensorFlow session
+    :param ob_space: (Gym Space) The observation space of the environment
+    :param ac_space: (Gym Space) The action space of the environment
+    :param n_env: (int) The number of environments to run
+    :param n_steps: (int) The number of steps to run for each environment
+    :param n_batch: (int) The number of batch to run (n_envs * n_steps)
+    :param reuse: (bool) If the policy is reusable or not
+    :param _kwargs: (dict) Extra keyword arguments for the nature CNN feature extraction
+    """
+
+    def __init__(self, sess, ob_space, ac_space, n_env, n_steps, n_batch, reuse=False, **_kwargs):
+        super(CnnPolicyA2C, self).__init__(sess, ob_space, ac_space, n_env, n_steps, n_batch, reuse,
+                                        feature_extraction=custom_cnn, **_kwargs)
 
 
 model_types = ['DQN', 'A2C']
@@ -60,7 +76,7 @@ parser = Parser(model_type)
 args = parser.parse()
 if model_type == 'DQN':
     env = gym.make('2DPickup-v0')
-    model = DQN(PickupCnnPolicy, 
+    model = DQN(PickupCnnPolicyDQN, 
                 env, 
                 verbose=1,
                 tensorboard_log='/srv/share/nkannabiran3/DQN/',
@@ -80,7 +96,7 @@ if model_type == 'DQN':
                 learning_rate=args.learning_rate)
 elif model_type == 'A2C':
     env = DummyVecEnv([lambda: gym.make('2DPickup-v0') for i in range(4)])
-    model = A2C(PickupCnnPolicy, 
+    model = A2C(CnnPolicyA2C, 
                 env, 
                 verbose=args.verbose,
                 tensorboard_log='/srv/share/nkannabiran3/A2C/',
