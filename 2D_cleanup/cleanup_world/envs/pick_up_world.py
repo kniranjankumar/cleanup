@@ -72,7 +72,7 @@ class PickupWorld(gym.Env):
 
     def get_random_location(self):
         if self.positions is None:
-            self.positions = list(self.np_random.permutation(
+            self.positions = list(self.np_random.permutation(1,
                 self.map.shape[0] * self.map.shape[1]))
         position = self.positions.pop()
         return int(position / self.map.shape[0]), position % self.map.shape[1]
@@ -86,7 +86,10 @@ class PickupWorld(gym.Env):
         self.items = {}
         self.done = False
         for k, v in items.items():
-            loc = self.get_random_location()
+            if k == 'agent':
+                loc = 0,0
+            else:
+                loc = self.get_random_location()
             self.add_to_world(k, loc)
         return self.get_obs()
 

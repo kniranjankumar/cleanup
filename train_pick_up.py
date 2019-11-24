@@ -1,7 +1,7 @@
 import gym
 import cleanup_world
 import os
-from stable_baselines import HER, DQN
+from stable_baselines import HER, DQN, A2C
 from options import Parser
 import tensorflow as tf
 import tensorflow.contrib.layers as tf_layers
@@ -12,8 +12,7 @@ from stable_baselines.common.policies import FeedForwardPolicy, register_policy,
 from stable_baselines.a2c.utils import conv, linear, conv_to_fc, batch_to_seq, seq_to_batch, lstm
 from stable_baselines.deepq.policies import FeedForwardPolicy
 from options import Parser
-parser = Parser("DQN")
-args = parser.parse()
+
 def custom_cnn(scaled_images, **kwargs):
     """
     CNN from Nature paper.
@@ -55,24 +54,39 @@ class PickupCnnPolicy(FeedForwardPolicy):
 
 env = gym.make('2DPickup-v0')
 
-model = DQN(PickupCnnPolicy, 
-            env, 
-            verbose=1,
-            tensorboard_log='/srv/share/nkannabiran3/DQN/',
-            double_q=args.double_q,
-            gamma=args.gamma,
-            exploration_final_eps=args.exploration_final_eps,
-            train_freq=args.train_freq,
-            batch_size=args.batch_size,
-            learning_starts=args.learning_starts,
-            target_network_update_freq=args.target_network_update_freq,
-            prioritized_replay=args.prioritized_replay,
-            prioritized_replay_alpha=args.prioritized_replay_alpha,
-            prioritized_replay_beta0=args.prioritized_replay_beta0,
-            prioritized_replay_beta_iters=args.prioritized_replay_beta_iters,
-            prioritized_replay_eps=args.prioritized_replay_eps,
-            param_noise=args.param_noise)
+model_types = ['DQN', 'A2C']
 
+model_type = model_types[1]
+parser = Parser(model_type)
+args = parser.parse()
+if model_type == 'DQN':
+    model = DQN(PickupCnnPolicy, 
+                env, 
+                verbose=1,
+                tensorboard_log='/srv/share/nkannabiran3/DQN/',
+                double_q=args.double_q,
+                gamma=args.gamma,
+                exploration_final_eps=args.exploration_final_eps,
+                train_freq=args.train_freq,
+                batch_size=args.batch_size,
+                learning_starts=args.learning_starts,
+                target_network_update_freq=args.target_network_update_freq,
+                prioritized_replay=args.prioritized_replay,
+                prioritized_replay_alpha=args.prioritized_replay_alpha,
+                prioritized_replay_beta0=args.prioritized_replay_beta0,
+                prioritized_replay_beta_iters=args.prioritized_replay_beta_iters,
+                prioritized_replay_eps=args.prioritized_replay_eps,
+                param_noise=args.param_noise,
+                learning_rate=args.learning_rate)
+elif model_type == 'A2C':
+    model = A2C(PickupCnnPolicy, 
+                env, 
+                verbose=args.verbose,
+                tensorboard_log='/srv/share/nkannabiran3/A2C/',
+                gamma=args.gamma,
+                learning_rate=args.learning_rate)
+    
+    
 model.learn(total_timesteps=args.num_learning_steps,tb_log_name=args.tensorboard_log_name)
 
 

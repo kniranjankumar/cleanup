@@ -38,6 +38,11 @@ class Parser:
             parser.add_argument("--verbose", type=int, required=False,default=0)
             parser.add_argument("--num_learning_steps", type=int, required=False,default=1000000)
             parser.add_argument("--tensorboard_log_name",type=str,required=False,default="DQN")
+        if mode == 'A2C':
+            parser.add_argument("--gamma", type=float,required=False, default=0.99)
+            parser.add_argument("--learning_rate", type=float,required=False,default=0.0007)
+            parser.add_argument("--verbose", type=int, required=False,default=0)
+            
         self.parser = parser
         self.args = None
     def parse(self, data=None):
