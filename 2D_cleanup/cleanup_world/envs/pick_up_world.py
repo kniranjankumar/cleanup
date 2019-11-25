@@ -111,7 +111,7 @@ class PickupWorld(gym.Env):
         action_space_str = ['forward', 'left', 'right', 'pick']
         action = action_space_str[action]
         self.t += 1
-        rew = -0.01
+        rew = -0.0
         assert self.done == False  # reset the world
         agent_location = self.items['agent'].loc
         if action == 'left':
