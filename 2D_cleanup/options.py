@@ -45,7 +45,8 @@ class Parser:
             parser.add_argument("--tensorboard_log_name",type=str,required=False,default="A2C")
             parser.add_argument("--num_learning_steps", type=int, required=False,default=1000000)
             parser.add_argument("--lr_schedule",type=str,required=False,default="linear")
-            
+            parser.add_argument("--ent_coef", type=float,required=False,default=0.01)
+            parser.add_argument("--full_tensorboard_log",type=bool,required=False,default=False)
             
         self.parser = parser
         self.args = None
