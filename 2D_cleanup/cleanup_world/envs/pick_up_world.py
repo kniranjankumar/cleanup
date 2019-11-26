@@ -32,7 +32,7 @@ class WorldObject(object):
 
 class PickupWorld(gym.Env):
 
-    def __init__(self, max_time_steps=100, is_goal_env=True, is_vectorized=False):
+    def __init__(self, max_time_steps=100, is_goal_env=True, is_vectorized=False, is_random_start=True):
         self.world_size = 8
         self.map = np.empty((self.world_size, self.world_size), dtype=object)
         self.items = {}
@@ -44,6 +44,7 @@ class PickupWorld(gym.Env):
         self._seed()
         self.done = True
         self.is_vectorized = is_vectorized
+        self.is_random_start = is_random_start
         if is_vectorized:
             self.observation_space = Box(high=np.ones(
                 [self.world_size*self.world_size*2]), low=-1*np.ones([self.world_size*self.world_size*2]), dtype='float')
@@ -70,11 +71,14 @@ class PickupWorld(gym.Env):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
-    def get_random_location(self):
+    def get_random_location(self,obj_name):
         if self.positions is None:
-            self.positions = list(self.np_random.permutation(
-                self.map.shape[0] * self.map.shape[1]))
-        position = self.positions.pop()
+            self.positions = list(self.np_random.permutation(np.arange(1,
+                self.map.shape[0] * self.map.shape[1])))
+        if obj_name == 'agent':
+            position = 0
+        else:    
+            position = self.positions.pop()
         return int(position / self.map.shape[0]), position % self.map.shape[1]
 
     def reset(self):
@@ -86,7 +90,7 @@ class PickupWorld(gym.Env):
         self.items = {}
         self.done = False
         for k, v in items.items():
-            loc = self.get_random_location()
+            loc = self.get_random_location(k)
             self.add_to_world(k, loc)
         return self.get_obs()
 
