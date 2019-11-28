@@ -1,4 +1,5 @@
 import gym
+from gym.envs.registration import register
 import cleanup_world
 import os
 from stable_baselines import HER, DQN, A2C
@@ -69,7 +70,7 @@ class CnnPolicyA2C(FeedForwardPolicy):
                                         feature_extraction=custom_cnn, **_kwargs)
 
 
-model_types = ['DQN', 'A2C']
+model_types = ['DQN', 'DQN_HER','A2C']
 
 model_type = model_types[1]
 parser = Parser(model_type)
@@ -78,7 +79,7 @@ if model_type == 'DQN':
     env = gym.make('2DPickup-v0')
     model = DQN(PickupCnnPolicyDQN, 
                 env, 
-                verbose=1,
+                verbose=args.verbose,
                 tensorboard_log='/srv/share/nkannabiran3/DQN/',
                 double_q=args.double_q,
                 gamma=args.gamma,
@@ -94,6 +95,37 @@ if model_type == 'DQN':
                 prioritized_replay_eps=args.prioritized_replay_eps,
                 param_noise=args.param_noise,
                 learning_rate=args.learning_rate)
+                
+elif model_type == 'DQN_HER':
+    register(
+    id='2DPickup-v1',
+    entry_point='cleanup_world.envs:PickupWorld',
+    is_goal_env=True,
+    is_random_start=True)
+    env = gym.make('2DPickup-v1')
+    model = HER(PickupCnnPolicyDQN, 
+                env, 
+                DQN, 
+                n_sampled_goal=args.num_sampled_goals, 
+                goal_selection_strategy=args.goal_selection_strategy,
+                verbose=args.verbose, 
+                exploration_fraction=args.exploration_fraction,                 
+                tensorboard_log='/srv/share/nkannabiran3/DQN/HER',
+                double_q=args.double_q,
+                gamma=args.gamma,
+                exploration_final_eps=args.exploration_final_eps,
+                train_freq=args.train_freq,
+                batch_size=args.batch_size,
+                learning_starts=args.learning_starts,
+                target_network_update_freq=args.target_network_update_freq,
+                prioritized_replay=args.prioritized_replay,
+                prioritized_replay_alpha=args.prioritized_replay_alpha,
+                prioritized_replay_beta0=args.prioritized_replay_beta0,
+                prioritized_replay_beta_iters=args.prioritized_replay_beta_iters,
+                prioritized_replay_eps=args.prioritized_replay_eps,
+                param_noise=args.param_noise,
+                learning_rate=args.learning_rate)
+                
 elif model_type == 'A2C':
     env = DummyVecEnv([lambda: gym.make('2DPickup-v0') for i in range(4)])
     model = A2C(CnnPolicyA2C, 
