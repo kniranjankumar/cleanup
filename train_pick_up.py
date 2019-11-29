@@ -49,7 +49,7 @@ class PickupCnnPolicyDQN(FeedForwardPolicy_DQN):
     def __init__(self, sess, ob_space, ac_space, n_env, n_steps, n_batch,
                  reuse=False, obs_phs=None, dueling=True, **_kwargs):
         super(PickupCnnPolicyDQN, self).__init__(sess, ob_space, ac_space, n_env, n_steps, n_batch, reuse,
-                                        feature_extraction="cnn", obs_phs=obs_phs, dueling=dueling, cnn_extractor=custom_cnn,
+                                        feature_extraction="mlp", obs_phs=obs_phs, dueling=dueling, cnn_extractor=custom_cnn,
                                         layer_norm=False, **_kwargs)
 class CnnPolicyA2C(FeedForwardPolicy):
     """
@@ -101,7 +101,8 @@ elif model_type == 'DQN_HER':
     id='2DPickup-v1',
     entry_point='cleanup_world.envs:PickupWorld',
     kwargs={'is_goal_env':True,
-    'is_random_start':True})
+    'is_random_start':True,
+    'is_vectorized':True})
     env = gym.make('2DPickup-v1')
     model = HER(PickupCnnPolicyDQN, 
                 env, 

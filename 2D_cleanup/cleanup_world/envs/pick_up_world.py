@@ -106,8 +106,8 @@ class PickupWorld(gym.Env):
             self.observation_space = Dict(
                 {
                     "observation": vector_box if self.is_vectorized else grid_box,
-                    "achieved_goal": vector_box if self.is_vectorized else loc_space,
-                    "desired_goal": vector_box if self.is_vectorized else loc_space,
+                    "achieved_goal": vector_box if self.is_vectorized else grid_box,
+                    "desired_goal": vector_box if self.is_vectorized else grid_box,
                 }
             )
         else:
