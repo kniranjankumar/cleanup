@@ -295,7 +295,7 @@ class PickupWorld(gym.Env):
             "left": "right",
             "right": "left",
         }
-        print(selected_cell_direction)
+        # print(selected_cell_direction)
         agent_direction = inverse_directions[selected_cell_direction]
         self.items["agent"].goal_loc = agent_location
         self.items["agent"].goal_direction = agent_direction
