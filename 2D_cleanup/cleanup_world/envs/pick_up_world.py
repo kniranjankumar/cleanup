@@ -254,6 +254,7 @@ class PickupWorld(gym.Env):
         #     orientation[v.goal_loc[0], v.goal_loc[1]] = DIRECTIONS[v.goal_direction]
         mat = np.stack([position / len(self.object_list), orientation / 3], axis=2)
         return self.normalize_array(mat)
+        # return self.self.items['object'].goal_loc
 
     @property
     def achieved_array(self):
@@ -306,10 +307,10 @@ class PickupWorld(gym.Env):
                 else self.map_array,
                 "achieved_goal": self.achieved_array.reshape(-1)
                 if self.is_vectorized
-                else self.achieved_array,
+                else self.achieved_array.reshape(-1),
                 "desired_goal": self.goal_array.reshape(-1)
                 if self.is_vectorized
-                else self.goal_array,
+                else self.goal_array.reshape(-1),
             }
 
     def get_position_from_array(self, array, objectID):
@@ -318,6 +319,8 @@ class PickupWorld(gym.Env):
         return location
 
     def compute_reward(self, achieved_goal, desired_goal, info):
+        achieved_goal = achieved_goal.reshape(self.map.shape)
+        desired_goal = desired_goal.reshape(self.map.shape)
         achieved_goal = self.unnormalize_array(achieved_goal)
         desired_goal = self.unnormalize_array(desired_goal)
         achieved_loc = self.get_position_from_array(achieved_goal,self.str2objID('object'))
