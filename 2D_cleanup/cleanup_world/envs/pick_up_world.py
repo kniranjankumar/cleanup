@@ -322,8 +322,8 @@ class PickupWorld(gym.Env):
         return location
 
     def compute_reward(self, achieved_goal, desired_goal, info):
-        achieved_goal = achieved_goal.reshape(self.map.shape)
-        desired_goal = desired_goal.reshape(self.map.shape)
+        # achieved_goal = achieved_goal.reshape(self.map.shape)
+        # desired_goal = desired_goal.reshape(self.map.shape)
         achieved_goal = self.unnormalize_array(achieved_goal)
         desired_goal = self.unnormalize_array(desired_goal)
         achieved_loc = self.get_position_from_array(achieved_goal,self.str2objID('object'))
