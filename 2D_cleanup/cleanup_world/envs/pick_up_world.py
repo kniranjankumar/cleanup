@@ -329,10 +329,12 @@ class PickupWorld(gym.Env):
         desired_goal = self.unnormalize_array(desired_goal)
         achieved_loc = self.get_position_from_array(achieved_goal,self.str2objID('object'))
         desired_loc = self.get_position_from_array(desired_goal,self.str2objID('object'))
-        if len(achieved_loc)==0:
-            x,y = self.items["agent"].loc
-            unbound_neighbors = {'up':[x - 1, y],'down':[x + 1, y],'left':[x, y - 1],'right':[x, y + 1]}
-            achieved_loc = unbound_neighbors[self.items['agent'].direction]
+        if len(achieved_loc)==0 or len(desired_goal)==0:
+            return 0
+        # if len(achieved_loc)==0:
+        #     x,y = self.items["agent"].loc
+        #     unbound_neighbors = {'up':[x - 1, y],'down':[x + 1, y],'left':[x, y - 1],'right':[x, y + 1]}
+        #     achieved_loc = unbound_neighbors[self.items['agent'].direction]
         print(achieved_loc,desired_loc)
         distance = np.linalg.norm(desired_loc[0]-achieved_loc[0],1)
         # return distance
