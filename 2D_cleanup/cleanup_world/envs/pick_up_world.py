@@ -317,7 +317,7 @@ class PickupWorld(gym.Env):
             }
 
     def get_position_from_array(self, array, objectID):
-        array = array.reshape(self.map.shape)
+        array = array.reshape(self.map.shape[0], self.map.shape[1],2)
         position = array[:,:,0]*len(self.object_list) 
         location = np.argwhere(position == objectID)
         return location
