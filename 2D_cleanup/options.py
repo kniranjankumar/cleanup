@@ -11,7 +11,6 @@ class Parser:
         parser = argparse.ArgumentParser()
         if mode == 'DQN_HER':
             parser.add_argument("--num_sampled_goals", type=int, required=False, help="path to images", default=4)
-            parser.add_argument("--exploration_fraction", type=float, help="Fraction of training spent exploring",default=0.5)
             parser.add_argument("--goal_selection_strategy", type=str, required=False, help="Goal selection strategy for HER",default='future')
             parser.add_argument("--tensorboard_log_name",type=str,required=False,default="DQN_HER")
         if mode == 'DQN' or mode == 'DQN_HER':

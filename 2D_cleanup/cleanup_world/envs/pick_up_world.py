@@ -72,7 +72,7 @@ class PickupWorld(gym.Env):
     def __init__(
         self,
         max_time_steps=100,
-        is_goal_env=True,
+        is_goal_env=False,
         is_vectorized=False,
         is_random_start=True,
     ):
