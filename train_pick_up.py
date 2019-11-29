@@ -100,8 +100,8 @@ elif model_type == 'DQN_HER':
     register(
     id='2DPickup-v1',
     entry_point='cleanup_world.envs:PickupWorld',
-    is_goal_env=True,
-    is_random_start=True)
+    kwargs={'is_goal_env':True,
+    'is_random_start':True})
     env = gym.make('2DPickup-v1')
     model = HER(PickupCnnPolicyDQN, 
                 env, 
