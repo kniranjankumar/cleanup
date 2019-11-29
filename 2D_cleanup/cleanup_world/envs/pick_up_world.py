@@ -99,12 +99,15 @@ class PickupWorld(gym.Env):
             low=-1 * np.ones([self.world_size, self.world_size, 2]),
             dtype="float",
         )
+        loc_space = Box(high=np.ones([self.world_size*self.world_size*2,]),
+            low=-1 * np.ones([self.world_size*self.world_size*2,]),
+            dtype="float")
         if self.is_goal_env:
             self.observation_space = Dict(
                 {
                     "observation": vector_box if self.is_vectorized else grid_box,
-                    "achieved_goal": vector_box if self.is_vectorized else grid_box,
-                    "desired_goal": vector_box if self.is_vectorized else grid_box,
+                    "achieved_goal": vector_box if self.is_vectorized else loc_space,
+                    "desired_goal": vector_box if self.is_vectorized else loc_space,
                 }
             )
         else:
