@@ -272,7 +272,7 @@ class PickupWorld(gym.Env):
         # ] = DIRECTIONS[self.items["agent"].direction]
         # object location
         if self.items["agent"].box_in_front is not None:
-            print("here")
+            # print("here")
             position[
                 self.items["agent"].box_in_front[0], self.items["agent"].box_in_front[1]
             ] = self.str2objID("object")
@@ -335,7 +335,7 @@ class PickupWorld(gym.Env):
         #     x,y = self.items["agent"].loc
         #     unbound_neighbors = {'up':[x - 1, y],'down':[x + 1, y],'left':[x, y - 1],'right':[x, y + 1]}
         #     achieved_loc = unbound_neighbors[self.items['agent'].direction]
-        print(achieved_loc,desired_loc)
+        # print(achieved_loc,desired_loc)
         distance = np.linalg.norm(desired_loc[0]-achieved_loc[0],1)
         # return distance
         return 2-2*distance/(self.map.shape[0]*self.map.shape[1])
