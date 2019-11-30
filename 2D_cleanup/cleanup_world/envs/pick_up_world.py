@@ -77,6 +77,7 @@ class PickupWorld(gym.Env):
         is_random_start=True,
     ):
         self.world_size = 8
+        self.objects = []
         self.map = np.empty((self.world_size, self.world_size), dtype=object)
         self.items = {}
         self.object_list = ["agent", "object"]
