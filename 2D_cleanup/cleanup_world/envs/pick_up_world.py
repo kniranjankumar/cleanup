@@ -223,9 +223,8 @@ class PickupWorld(gym.Env):
             # #         # pickedup object
             # #         rew = 1
             # #         self.done = True
-        if not is_empty:
-            rew = 1
         obs = self.get_obs()
+        rew = self.compute_reward(obs['achieved_goal'],obs['desired_goal'],None)
         if self.t == self.TIME_LIMIT:
             self.done = True
         return obs, rew, self.done, {}
