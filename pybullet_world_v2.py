@@ -13,7 +13,7 @@ p.setPhysicsEngineParameter(numSolverIterations=10)
 p.setTimeStep(1. / 120.)
 # logId = p.startStateLogging(p.STATE_LOGGING_PROFILE_TIMINGS, "visualShapeBench.json")
 # useMaximalCoordinates is much faster then the default reduced coordinates (Featherstone)
-p.loadURDF("plane.urdf", useMaximalCoordinates=True,
+p.loadURDF("./data/ground/plane.urdf", useMaximalCoordinates=True,
            basePosition=[0.5, 0.5, 0])
 # disable rendering during creation.
 p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
@@ -250,15 +250,7 @@ class CleanupWorld():
                                 object_count += 1
                                 for i in range(len(obj_list)-1):
                                     print(i+1,obj_list[i+1]['name'])
-                    
-        # for i in range(4):
-        #     agent = Object(world_properties=self.world_properties, 
-        #         objectid=i+1, 
-        #         location=[i, i],                 
-        #         properties=obj_list[i])
-        #     self.map[i:i+obj_list[i]['shape'][0],i:i+obj_list[i]['shape'][1]] = agent
-        #     self.world_objects[obj_list[i]['name']] = agent
-            
+                      
         self.done = True
         self.item_on_hand = None
         self.TIME_LIMIT = max_time_steps

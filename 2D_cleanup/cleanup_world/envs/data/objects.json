@@ -1,0 +1,233 @@
+[
+    {
+        "name": "agent",
+        "path": "./data/lego_man/",
+        "model_name": "LEGO_Man.obj",
+        "texture_name": null,
+        "offset_position": [
+            0,
+            0,
+            0.05
+        ],
+        "offset_orientation": [
+            0,
+            0.7071068,
+            0.7071068,
+            0
+        ],
+        "scale": 0.3,
+        "is_infertile": false,
+        "surface_offset":1.6,
+        "is_movable":true,
+        "shape":[1,1],
+        "probability":[1,0,0,0]
+    },
+    {
+        "name": "chair",
+        "path": "./data/chair/",
+        "model_name": "chair.obj",
+        "texture_name": "diffuse.tga",
+        "offset_position": [
+            -0.35,
+            -0.8,
+            0.3
+        ],
+        "offset_orientation": [
+            0.7071068,
+            0,
+            0,
+            0.7071068
+        ],
+        "scale": 0.08,
+        "is_infertile": false,
+        "surface_offset":0.9,
+        "is_movable":true,
+        "shape":[1,1],
+        "probability":[0.8,0.95,0.5,0.90]
+    },
+    {
+        "name": "plate",
+        "path": "./data/plate/",
+        "model_name": "Tarelka.obj",
+        "texture_name": "Tarelka.mtl",
+        "offset_position": [
+            0,
+            0,
+            0
+        ],
+        "offset_orientation": [
+            0.7071068,
+            0,
+            0,
+            0.7071068
+        ],
+        "scale": 3,
+        "is_infertile": true,
+        "surface_offset":0,
+        "is_movable":true,
+        "shape":[1,1],
+        "probability":[0.5,0.5,0.5,0.5]
+    },
+    {
+        "name": "tv",
+        "path": "./data/tv_2/",
+        "model_name": "Samsung LED TV.obj",
+        "texture_name": "maps/Frame_bump.jpg",
+        "offset_position": [
+            0,
+            0,
+            0
+        ],
+        "offset_orientation": [
+            0,
+            0,
+            0,
+            1
+        ],
+        "scale": 0.1,
+        "is_infertile": true,
+        "surface_offset":1.1,
+        "is_movable":true,
+        "shape":[1,1],
+        "probability":[0.7,0,0,0]
+    },
+    {
+        "name": "couch",
+        "path": "./data/couch_2/",
+        "model_name": "Sofa GM Plutone_OBJ.obj",
+        "texture_name": "Cloth_Sofa GM Plutone_Dif.jpg",
+        "offset_position": [
+            -1.45,
+            0,
+            0.3
+        ],
+        "offset_orientation": [
+            0.7071068,
+            0,
+            0,
+            0.7071068
+        ],
+        "scale": 0.002,
+        "is_infertile": false,
+        "surface_offset":1.1,
+        "is_movable":false,
+        "shape":[4,2],
+        "probability":[0.9,0,0,0]
+    },
+    {
+        "name": "book",
+        "path": "./data/book/",
+        "model_name": "book.obj",
+        "texture_name": "book.jpg",
+        "offset_position": [
+            0,
+            0,
+            0
+        ],
+        "offset_orientation": [
+            0,
+            0,
+            0,
+            1
+        ],
+        "scale": 0.07,
+        "is_infertile": true,
+        "surface_offset":0,
+        "is_movable":true,
+        "shape":[1,1],
+        "probability":[0.5,0.5,0,0]
+    },
+
+    {
+        "name": "phone",
+        "path": "./data/phone/",
+        "model_name": "phone.obj",
+        "texture_name": "phone.jpg",
+        "offset_position": [
+            0,
+            0,
+            0
+        ],
+        "offset_orientation": [
+            0,
+            0,
+            0,
+            1
+        ],
+        "scale": 0.03,
+        "is_infertile": true,
+        "surface_offset":1.35,
+        "is_movable":true,
+        "shape":[1,1],
+        "probability":[0.5,0,0,0]
+    },
+    {
+        "name": "laptop",
+        "path": "./data/laptop/",
+        "model_name": "laptop.obj",
+        "texture_name": "laptop.jpg",
+        "offset_position": [
+            0,
+            0,
+            0
+        ],
+        "offset_orientation": [
+            0,
+            0,
+            0,
+            1
+        ],
+        "scale": 0.03,
+        "is_infertile": true,
+        "surface_offset":1.35,
+        "is_movable":true,
+        "shape":[1,1],
+        "probability":[0.5,0,0,0]
+    },
+    {
+        "name": "cupboard",
+        "path": "./data/cupboard/",
+        "model_name": "cupboard.obj",
+        "texture_name": "cupboard.png",
+        "offset_position": [
+            0,
+            0,
+            -0.5
+        ],
+        "offset_orientation": [
+            0.7071068,
+            0,
+            0,
+            0.7071068
+        ],
+        "scale": 0.4,
+        "is_infertile": false,
+        "surface_offset":1.35,
+        "is_movable":true,
+        "shape":[1,1],
+        "probability":[0.8,0.5,0.5,0.5]
+    },
+    {
+        "name": "coffee_table",
+        "path": "./data/coffee_table/",
+        "model_name": "coffee_table.obj",
+        "texture_name": "coffee_table.mtl",
+        "offset_position": [
+            -1,
+            -0.43,
+            0
+        ],
+        "offset_orientation": [
+            0,
+            0,
+            0,
+            1
+        ],
+        "scale": 0.022,
+        "is_infertile": false,
+        "surface_offset":1.1,
+        "is_movable":false,
+        "shape":[3,2],
+        "probability":[0.5,0,0,0]
+    }
+]

@@ -1,254 +1,485 @@
+import pybullet as p
+import time
+import math
 import numpy as np
-import cv2
-from matplotlib import pyplot as plt
-import random
 import os
+import json
+import copy
+import pickle as pkl
 import gym
-from gym import error, spaces, utils
-from gym.utils import seeding
 from gym.spaces import Dict, Box, Discrete
+path = os.getcwd()
+base_path = path+"/2D_cleanup/cleanup_world/envs"
+class Object:
+    def __init__(
+        self,
+        world_properties,
+        objectid,
+        properties,
+        facing_direction=0,
+        location=[0, 0],
+        render=False,
+    ):
+        self.offset_position = properties["offset_position"]
+        self.offset_orientation = properties["offset_orientation"]
+        self.scale = properties["scale"]
+        self.surface_offset = properties["surface_offset"]
+        self.is_infertile = properties["is_infertile"]
+        self.name = properties["name"]
+        self.world_properties = world_properties
+        self.objectid = objectid
+        self.facing_direction = facing_direction
+        self.orientation = properties["offset_orientation"]
+        self.location = location
+        self.children = {}
+        self.parent = None
+        shape = properties["shape"]
+        self.slots = np.empty(shape, dtype=object)
+        self.is_movable = properties["is_movable"]
+        if render:
+            self.Uid = self.add_mesh(
+                path=properties["path"],
+                mesh_name=properties["model_name"],
+                tex_name=properties["texture_name"],
+                position=[
+                    location[0] * self.world_properties["scale"],
+                    location[1] * self.world_properties["scale"],
+                    1,
+                ],
+                orientation=self.offset_orientation,
+                scale=self.scale,
+            )
+            self.put_object_in_grid()
+
+    def add_children(self, child, loc):
+        assert self.is_infertile == False
+        relative_loc = self.local_position(loc)
+        # print('relative location', relative_loc)
+        if isinstance(self.slots[relative_loc[0], relative_loc[1]], Object):
+            return False
+        else:
+            self.slots[relative_loc[0], relative_loc[1]] = child
+            self.children[child.name] = child
+            child.set_location(loc)
+            child.parent = self
+            return True
+        # self.is_infertile = True
+
+    def remove_children(self, loc):
+        relative_loc = self.local_position(loc)
+        if isinstance(self.slots[relative_loc[0], relative_loc[1]], Object):
+            child = self.slots[relative_loc[0], relative_loc[1]]
+            del self.children[child.name]
+            child.parent = None
+            self.slots[relative_loc[0], relative_loc[1]] = object()
+        return child
+
+    def set_orientation(self, turn_direction):
+        if turn_direction == "right":
+            self.facing_direction -= 1
+            if self.facing_direction == -1:
+                self.facing_direction = 3
+        if turn_direction == "left":
+            self.facing_direction += 1
+            if self.facing_direction == 4:
+                self.facing_direction = 0
+        # print('facing', self.facing_direction)
+        angle = np.pi / 2 * self.facing_direction
+        base_angle = p.getEulerFromQuaternion(self.offset_orientation)
+        new_angles = [base_angle[0], 0, np.pi + angle]
+        quaternion = p.getQuaternionFromEuler(new_angles)
+        if self.has_children():
+            for child_name, child in self.children.items():
+                child.set_orientation(turn_direction)
+        self.orientation = quaternion
+
+    def set_location(self, loc):
+        self.location = loc
+        if self.has_children:
+            for child_name, child in self.children.items():
+                child.set_location(loc)
+
+    def add_mesh(
+        self,
+        path="./data/chair/",
+        mesh_name="chair.obj",
+        tex_name="diffuse.tga",
+        position=[0, 0, 1],
+        orientation=[0.7071068, 0, 0, 0.7071068],
+        scale=0.1,
+    ):
+        shift = [0, -0.02, 0]
+        meshScale = [scale, scale, scale]
+        path1 = "./data/chair/"
+        mesh_name1 = "chair.obj"
+        tex_name1 = None
+        # the visual shape and collision shape can be re-used by all createMultiBody instances (instancing)
+        visualShapeId = p.createVisualShape(
+            shapeType=p.GEOM_MESH,
+            fileName=base_path+'/'+path + mesh_name,
+            rgbaColor=[1, 1, 1, 1],
+            specularColor=[0.4, 0.4, 0],
+            visualFramePosition=shift,
+            meshScale=meshScale,
+        )
+        collisionShapeId = p.createCollisionShape(
+            shapeType=p.GEOM_MESH,
+            fileName=base_path+'/'+path + mesh_name,
+            collisionFramePosition=shift,
+            meshScale=meshScale,
+        )
+        rangex = 5
+        rangey = 5
+        bodyUid = p.createMultiBody(
+            baseMass=0,
+            baseInertialFramePosition=[0, 0, 0],
+            baseCollisionShapeIndex=collisionShapeId,
+            baseVisualShapeIndex=visualShapeId,
+            basePosition=position,
+            baseOrientation=orientation,
+            useMaximalCoordinates=True,
+        )
+        if tex_name != None:
+            texUid = p.loadTexture(path + tex_name)
+            p.changeVisualShape(bodyUid, -1, textureUniqueId=texUid)
+        return bodyUid
+
+    def put_object_in_grid(self):
+        R = np.array(p.getMatrixFromQuaternion(self.orientation)).reshape(3, 3)
+        # print(R.shape, np.array(offset).shape)
+        offset = -R @ np.array(self.offset_position)
+        # base_orientation = self.orientation[object_name]
+        if self.has_parent:
+            height = self.parent.surface_offset
+        else:
+            height = 0
+        p.resetBasePositionAndOrientation(
+            self.objectid,
+            [
+                self.location[0] * self.world_properties["scale"] + offset[0],
+                self.location[1] * self.world_properties["scale"] + offset[1],
+                height + offset[2],
+            ],
+            self.orientation,
+        )  # place agent in new location
+        if self.has_children():
+            # print(self.children)
+            for child_name, child in self.children.items():
+                child.put_object_in_grid()
+
+    def has_children(self, loc=None):
+        if loc is not None:
+            relative_loc = loc[0] - self.location[0], loc[1] - self.location[1]
+            if isinstance(self.slots[relative_loc[0], relative_loc[1]], Object):
+                return True
+        else:
+            return False if len(self.children.keys()) == 0 else True
+
+    def get_children(self, loc):
+        relative_loc = loc[0] - self.location[0], loc[1] - self.location[1]
+        if isinstance(self.slots[relative_loc[0], relative_loc[1]], Object):
+            return self.slots[relative_loc[0], relative_loc[1]]
+        else:
+            return None
+
+    def local_position(self, loc):
+        return loc[0] - self.location[0], loc[1] - self.location[1]
+
+    @property
+    def has_parent(self):
+        return not self.parent == None
 
 class CleanupWorld(gym.Env):
+    def __init__(self, max_time_steps=100, is_goal_env=True, render=True):
 
-    def __init__(self, max_time_steps=100,is_goal_env=True):
-
-        self.action_space_str = ['forward', 'left', 'right', 'pick']
-        self.directions = {'up':0,'left':1,'down':2,'right':3}
+        self.action_space_str = ["forward", "left", "right", "pick"]
+        self.action_space = Discrete(4)
+        self.directions = {"up": 0, "left": 1, "down": 2, "right": 3}
         self.done = False
-        self.map = np.zeros([8,8],dtype='uint8')
-        self.goal_map = np.zeros([8,8],dtype='uint8')
-        images= ['bg.png','sprite_up.png','sprite_left.png','sprite_down.png','sprite_right.png', 'obj0.png', 'obj1.png', 'obj2.png', 'obj3.png']
-        self.keys = ['bg','up','left','down','right','cookie','choco','sushi','apple']
-        pwd = os.getcwd()
-        print(pwd)
-        self.image_list = {key:cv2.imread(pwd+'/2D_cleanup/cleanup_world/envs/images/'+img) for img,key in zip(images,self.keys)}
+        self.world_size = 8
+        # channel 0 for marking object positions and channel 1 to store orientation/direction
+        self.map = np.empty((self.world_size, self.world_size), dtype=object)
+        self.world_objects = {}
+        self.world_properties = {"scale": 1, "size": self.world_size}
+        objects_available = [
+            "agent",
+            "chair",
+            "plate",
+            "tv",
+            "couch",
+            "book",
+            "phone",
+            "laptop",
+            "cupboard",
+            "coffee_table",
+        ]
+        objects = ['agent','chair','plate','tv','couch','book','phone','laptop', 'cupboard','coffee_table']
+        # objects_in_world = {'agent':1,'chair':4,'couch':1,'tv':1,'cupboard':1,'coffee_table':1,'laptop':1}
+        objects_in_world = {"agent": 1}
+        # objects_in_world = {}
+
+        with open(base_path+"/data/objects.json", "r") as f:
+            obj_list = json.load(f)
+        obj_dict = {obj["name"]: obj for obj in obj_list}
+        object_count = 0
+        if render:
+            self.init_renderer()
+            p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)
+            
+        obj_instance = copy.deepcopy(obj_dict['agent'])
+        obj_instance['name'] = obj_instance['name']+"_"+str(0)
+        loc = self.get_suitable_location(obj_instance['shape'])
+        obj = Object(world_properties=self.world_properties, 
+            objectid=object_count+1, 
+            location=[loc[0], loc[1]],                 
+            properties=obj_instance,
+            render=render)
+        self.map[loc[0]:loc[0]+obj_instance['shape'][0],loc[1]:loc[1]+obj_instance['shape'][1]] = obj
+        self.world_objects['agent'] = obj
+        self.init_objects()
         self.done = True
-        self.agent_location = None
-        self.agent_direction = None
-        self.purse = None
+        self.item_on_hand = None
         self.TIME_LIMIT = max_time_steps
         self.t = 0
-        self.image_shape = 256
-        # self.observation_space = Box(high=20 * np.ones([64]), low=np.zeros([64]), dtype='uint8')
-        self.observation_space = Dict(
-            {'observation': Box(high=20 * np.ones([64]), low=np.zeros([64]), dtype='uint8'),
-             'achieved_goal': Box(high=20*np.ones([64]) , low=np.zeros([64]), dtype='uint8'),
-             'desired_goal': Box(high=20*np.ones([64]) , low=np.zeros([64]), dtype='uint8')})
+        if render:
+            self.build_the_wall()
+            p.setGravity(0, 0, -10)
+            p.setRealTimeSimulation(1)
 
-        # self.observation_space = Box(high=255 * np.ones([self.image_shape, self.image_shape, 3]), low=np.zeros([self.image_shape, self.image_shape, 3]), dtype='uint8')
-        # self.observation_space = Dict(
-        #     {'goal': Box(high=255 * np.ones([256, 256, 3]), low=np.zeros([256, 256, 3]), dtype='uint8'),
-        #      'observed': Box(high=255 * np.ones([256, 256, 3]), low=np.zeros([256, 256, 3]), dtype='uint8')})
-        self.action_space = Discrete(4)
-        self._seed()
-        self.is_init_goal = False
-        self.apple_loc = 0,0
-        self.is_goal_env = is_goal_env
+    def init_renderer(self):
+        cid = p.connect(p.SHARED_MEMORY)
+        if cid < 0:
+            p.connect(p.DIRECT)
+        p.setPhysicsEngineParameter(numSolverIterations=10)
+        p.setTimeStep(1.0 / 120.0)
+        # logId = p.startStateLogging(p.STATE_LOGGING_PROFILE_TIMINGS, "visualShapeBench.json")
+        # useMaximalCoordinates is much faster then the default reduced coordinates (Featherstone)
+        p.loadURDF(
+            base_path+"/data/ground/plane.urdf",
+            useMaximalCoordinates=True,
+            basePosition=[0.5, 0.5, 0],
+        )
+        # # disable rendering during creation.
+        # p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
+        # p.configureDebugVisualizer(p.COV_ENABLE_GUI, 0)
+        # # disable tinyrenderer, software (CPU) renderer, we don't use it here
+        # p.configureDebugVisualizer(p.COV_ENABLE_TINY_RENDERER, 0)
+        # p.resetDebugVisualizerCamera(
+        #     cameraDistance=10,
+        #     cameraYaw=0,
+        #     cameraPitch=-50,
+        #     cameraTargetPosition=[4, 4, 0],
+        # )
 
-    def _seed(self, seed=None):
-        # print('set_seed', seed)
-        self.np_random, seed = seeding.np_random(seed)
-        return [seed]
+    def init_objects(self):
+        # TODO initialize the grid with objects1
+        pass
+
+    def get_suitable_location(self, shape):
+        # get int map from obj map
+        int_map = np.zeros_like(self.map, dtype="uint8")
+        kernel = np.ones(shape, dtype="uint8")
+        for i in range(self.map.shape[0]):
+            for j in range(self.map.shape[1]):
+                int_map[i, j] = 1 if isinstance(self.map[i, j], Object) else 0
+        # convolve int_map with kernel
+        conv_out = np.zeros(
+            [self.map.shape[0] - kernel.shape[0], self.map.shape[1] - kernel.shape[1]],
+            dtype="int",
+        )
+        for i in range(self.map.shape[0] - kernel.shape[0]):
+            for j in range(self.map.shape[1] - kernel.shape[1]):
+                product = (
+                    int_map[i : i + kernel.shape[0], j : j + kernel.shape[1]] * kernel
+                )
+                conv_out[i, j] = np.sum(product)
+        feasable_locations = np.argwhere(conv_out == 0)
+        if len(feasable_locations) == 0:
+            print("cannot add more objects")
+            return None
+        return feasable_locations[np.random.randint(0, feasable_locations.shape[0]), :]
+
+    def build_the_wall(self):
+        colBoxId = p.createCollisionShape(
+            p.GEOM_BOX, halfExtents=[0.01, self.world_size / 2, 3]
+        )
+        visualShapeId = p.createVisualShape(
+            p.GEOM_BOX, halfExtents=[0.1, self.world_size / 2, 3]
+        )
+        bodyUid = p.createMultiBody(
+            baseMass=0,
+            baseInertialFramePosition=[0, 0, 0],
+            baseCollisionShapeIndex=colBoxId,
+            baseVisualShapeIndex=visualShapeId,
+            basePosition=[self.world_size - 0.5, self.world_size * 0.5 - 0.5, 0],
+            baseOrientation=[0, 0, 0, 1],
+            useMaximalCoordinates=True,
+        )
+        bodyUid = p.createMultiBody(
+            baseMass=0,
+            baseInertialFramePosition=[0, 0, 0],
+            baseCollisionShapeIndex=colBoxId,
+            baseVisualShapeIndex=visualShapeId,
+            basePosition=[-0.5, self.world_size * 0.5 - 0.5, 0],
+            baseOrientation=[0, 0, 0, 1],
+            useMaximalCoordinates=True,
+        )
+        bodyUid = p.createMultiBody(
+            baseMass=0,
+            baseInertialFramePosition=[0, 0, 0],
+            baseCollisionShapeIndex=colBoxId,
+            baseVisualShapeIndex=visualShapeId,
+            basePosition=[self.world_size * 0.5 - 0.5, self.world_size - 0.5, 0],
+            baseOrientation=[0, 0, 0.7071068, 0.7071068],
+            useMaximalCoordinates=True,
+        )
 
     def reset(self):
-        # print('reset')
-        self.map *= 0
-        self.goal_map*= 0
-        if self.agent_location is not None:
-            self.map[self.agent_location[0], self.agent_location[1]] = 0
-        self.agent_location = [0, 0]
-        self.agent_direction = 'up'
-        positions = list(self.np_random.permutation(self.map.shape[0] * self.map.shape[1]))
+        self.map = np.zeros([8, 8], dtype="uint8")
+        self.map[0, 0] = self.world_objects["agent"].objectid  # agent
+        self.world_objects["agent"].set_location([0, 0])
+        self.map[3, 3] = self.world_objects["chair"].objectid
+        self.world_objects["chair"].set_location([3, 3])
 
-        # for i in range(5, 9):
-        #     position = positions.pop()
-        #     self.map[int(position / self.map.shape[0]), position % self.map.shape[1]] = i
-        position = positions.pop()
-        self.map[int(position / self.map.shape[0]), position % self.map.shape[1]] = 5
-        # if not self.is_init_goal:
-        position = positions.pop()
-        # position = 10
-        self.apple_loc = int(position / self.map.shape[0]), position % self.map.shape[1]
-        self.goal_map[int(position / self.map.shape[0]), position % self.map.shape[1]] = 5
-        self.is_init_goal = True
+    def get_obj_from_id(self, id):
+        for k, v in self.objectid.items():
+            if v == id:
+                obj_name = k
+                return obj_name
 
-            # for i in range(5, 9):
-            #     position = positions.pop()
-            #     self.goal_map[int(position / self.map.shape[0]), position % self.map.shape[1]] = i
-            #     self.is_init_goal = True
-        # self.map[3,3] = 5 #cookie
-        # self.map[7,2] = 6 #choco
-        # self.map[1,1] = 7 #sushi
-        # self.map[5,5] = 8 #apple
-        self.map[self.agent_location[0], self.agent_location[1]] = self.directions[self.agent_direction] + 1
-        self.purse = None
-        self.done = False
-        return self.get_obs()
+    def update_render(self, obj):
+        obj.put_object_in_grid()
 
-    def render(self, mode='human'):
-        image = np.zeros([self.map.shape[0]*32, self.map.shape[0]*32, 3],dtype='uint8')
+    def get_observation(self):
+        int_map = np.zeros([self.map.shape[0], self.map.shape[1], 2], dtype="uint8")
         for i in range(self.map.shape[0]):
             for j in range(self.map.shape[1]):
-                # print('here')
-                # print(self.image_list)
-                image[i*32:(i+1)*32,j*32:(j+1)*32,:] = self.image_list[self.keys[self.map[i,j]]]
-
-        image_goal = np.zeros([self.map.shape[0]*32, self.map.shape[0]*32, 3],dtype='uint8')
-        for i in range(self.map.shape[0]):
-            for j in range(self.map.shape[1]):
-                # print('here')
-                # print(self.image_list)
-                image_goal[i*32:(i+1)*32,j*32:(j+1)*32,:] = self.image_list[self.keys[self.goal_map[i,j]]]
-        image = cv2.resize(image, (self.image_shape, self.image_shape))
-        if mode == 'human':
-            # cv2.imshow('win',np.concatenate([image,image_goal], axis=1))
-            cv2.imshow('win', image)
-            cv2.waitKey(5)
-        elif mode == 'rgb_array':
-            return image
-            # return {'goal':image_goal, 'observed':image}
-
-    def get_neighbors(self, x, y,see_objects=True):
-        up = x-1, y
-        down = x+1, y
-        left = x, y-1
-        right = x, y+1
-        neighbours = {'up': up, 'down': down, 'left': left, 'right': right}
-        #         [print(v) for k,v in neighbours.items()]
-        neighbours = {k: v for k, v in neighbours.items() if v[0] >= 0 and v[0] < self.map.shape[0] and v[1] >= 0 and v[1] < self.map.shape[1]}
-        if see_objects:
-            neighbours = {k: v for k, v in neighbours.items() if self.map[v[0],v[1]] == 0}
-        return neighbours
-
-    def turn(self, direction):
-        change = -1 if direction == 'right' else 1
-        direction_num = (self.directions[self.agent_direction]+change)%4
-        # print(direction_num)
-        self.agent_direction = [direction for direction, num in self.directions.items() if num == direction_num][0]
-        self.map[self.agent_location[0], self.agent_location[1]] = self.directions[self.agent_direction] + 1
-        # print(self.agent_direction)
-
-    def difference(self):
-        temp = np.copy(self.map)
-        temp[self.agent_location[0], self.agent_location[1]] = 0
-        diff = self.goal_map!=temp
-        # diff[self.agent_location[0], self.agent_location[1]] = False
-        return np.sum(diff.astype('uint8'))
+                int_map[i, j, 0] = (
+                    self.map[i, j].objectid if isinstance(self.map[i, j], Object) else 0
+                )
+                if int_map[i, j, 0] != 0:
+                    int_map[i, j, 1] = (
+                        self.map[i, j].get_children([i, j]).objectid
+                        if self.map[i, j].has_children([i, j])
+                        else 0
+                    )
+        return int_map
 
     def step(self, action):
-        # print('step')
+        assert self.t < self.TIME_LIMIT #exceeded time limit
         action = self.action_space_str[action]
-        self.t += 1
-        rew = 0
-        assert self.done == False  # reset the world
-        if action == 'left':
-            self.turn('left')
-        elif action == 'right':
-            self.turn('right')
-        elif action == 'forward':
-            possible_actions = self.get_neighbors(self.agent_location[0], self.agent_location[1])
-            # print('forward actions', possible_actions)
-            if self.agent_direction in possible_actions.keys():
-                # print(self.agent_direction)
-                move_to = possible_actions[self.agent_direction]
-                self.map[self.agent_location[0], self.agent_location[1]] = 0
-                self.agent_location = move_to
-                self.map[self.agent_location[0], self.agent_location[1]] = self.directions[self.agent_direction] + 1
-        elif action == 'pick':
-            if self.purse is None:
-                possible_actions = self.get_neighbors(self.agent_location[0], self.agent_location[1],see_objects=False)
-                if self.agent_direction in possible_actions.keys():
-                    # print('here')
-                    box_in_front = possible_actions[self.agent_direction]
-                    obj_in_front = self.map[box_in_front[0], box_in_front[1]]
-                    # print(obj_in_front)
-                    if 5 <= obj_in_front <= 8:
-                        # print(obj_in_front)
-                        self.purse = obj_in_front
-                        self.map[box_in_front[0], box_in_front[1]] = 0
-            else:
-                possible_actions = self.get_neighbors(self.agent_location[0], self.agent_location[1])
-                if self.agent_direction in possible_actions.keys():
-                    box_in_front = possible_actions[self.agent_direction]
-                    self.map[box_in_front[0], box_in_front[1]] = self.purse
-                    self.purse = None
+        print(action)
+        map_loc = self.world_objects["agent"].location
+        if action == "forward" or action == "pick":
+            if self.world_objects["agent"].facing_direction == 0:
+                new_loc = map_loc[0], map_loc[1] + 1
+            elif self.world_objects["agent"].facing_direction == 1:
+                new_loc = map_loc[0] - 1, map_loc[1]
+            elif self.world_objects["agent"].facing_direction == 2:
+                new_loc = map_loc[0], map_loc[1] - 1
+            elif self.world_objects["agent"].facing_direction == 3:
+                new_loc = map_loc[0] + 1, map_loc[1]
+            # print('here', new_loc)
 
-        obs = self.get_obs()
-        diff = self.difference()
-        # rew = 1-diff/4
-        rew = self.compute_reward(obs['achieved_goal'],obs['desired_goal'], None)
+            if (
+                new_loc[0] < 0
+                or new_loc[1] < 0
+                or new_loc[0] > self.world_properties["size"] - 1
+                or new_loc[1] > self.world_properties["size"] - 1
+            ):
+                return
+            if action == "forward":
+                if isinstance(self.map[new_loc[0], new_loc[1]], Object):
+                    return
 
+                self.map[new_loc[0], new_loc[1]] = self.world_objects["agent"]
+                self.world_objects["agent"].set_location(new_loc)
+                # self.world_objects['agent'].location = new_loc[0], new_loc[1]
+                self.map[map_loc[0], map_loc[1]] = object()
+                self.update_render(self.world_objects["agent"])
+            elif action == "pick":
+                if not self.world_objects["agent"].has_children():
+                    if isinstance(self.map[new_loc[0], new_loc[1]], Object):
+                        # Execute pick action
+                        obj_in_front = self.map[new_loc[0], new_loc[1]]
+                        if obj_in_front.has_children(new_loc):
+                            obj_in_front = obj_in_front.remove_children(new_loc)
+                        else:
+                            if obj_in_front.is_movable:
+                                self.map[new_loc[0], new_loc[1]] = object()
+                            else:
+                                return
+                        # print('adding children')
+                        self.world_objects["agent"].add_children(
+                            obj_in_front, self.world_objects["agent"].location
+                        )
+                        self.update_render(self.world_objects["agent"])
+                        # self.map[new_loc[0], new_loc[1]] = 0
+                else:
+                    # Execute place action
+                    obj_in_front = self.map[new_loc[0], new_loc[1]]
+                    if isinstance(obj_in_front, Object):
+                        if not obj_in_front.is_infertile:
+                            child = self.world_objects["agent"].remove_children(
+                                self.world_objects["agent"].location
+                            )
+                            success = obj_in_front.add_children(child, new_loc)
+                            if not success:
+                                self.world_objects["agent"].add_children(
+                                    child, self.world_objects["agent"].location
+                                )
+                                return
+                        else:
+                            return
+                    else:
+                        child = self.world_objects["agent"].remove_children(
+                            self.world_objects["agent"].location
+                        )
+                        self.map[new_loc[0], new_loc[1]] = child
+                    # del self.world_objects['agent'].children[child.name]
+                    child.set_location(new_loc)
+                    self.update_render(child)
 
-        if self.t == self.TIME_LIMIT:
-            self.done = True
-            self.t = 0
-        return obs, rew, self.done, {}
+        if action == "right":
+            self.world_objects["agent"].set_orientation("right")
+            self.update_render(self.world_objects["agent"])
 
-    def get_obs(self):
-        if self.is_goal_env:
-            # apple_loc = np.argwhere(self.map == 5)
-            # apple_loc = apple_loc[0,:]
-            # if apple_loc.shape[0] == 0:
-            #     apple_loc = -1
-            # else:
-            #     # print(apple_loc)
-            #     apple_loc = apple_loc[0] * 8 + apple_loc[1]
-            temp = np.copy(self.map)
-            temp[self.agent_location[0],self.agent_location[1]]=0
-            if self.purse is not None:
-                temp[self.agent_location[0],self.agent_location[1]] = self.purse
-            
-            return {'observation':self.map.reshape(-1)/9-0.5,
-                    'achieved_goal':temp.reshape(-1)/9-0.5,
-                    'desired_goal':self.goal_map.reshape(-1)/9-0.5}
-                    
-        return self.map.reshape(-1)/9-0.5
-        # return self.render(mode='rgb_array')
-    def compute_reward(self, achieved_goal, desired_goal, info):
-        # print(achieved_goal)
-        picked_up = False
-        achieved_goal = (achieved_goal.reshape([8,8]) + 0.5)*9
-        desired_goal = (desired_goal.reshape([8,8])+0.5)*9
-        # print(achieved_goal)
-        apple_loc = np.argwhere(achieved_goal == 5)
-        if apple_loc.shape[0] == 0:
-            #agent has picked up the apple
-            picked_up = True
-            apple_loc = self.agent_location
-        else:
-            apple_loc = apple_loc[0, :]
-        apple_goal = np.argwhere(desired_goal == 5)
-        if apple_goal.shape[0] == 0:
-            #agent has picked up the apple
-            apple_goal = self.agent_location
-        else:
-            apple_goal = apple_goal[0, :]
-        # print(apple_loc,apple_goal)
-        diff = np.linalg.norm(np.array(apple_loc)-np.array(apple_goal))
-        # if diff < 0.01 and not picked_up:
-        #     diff = -8
-        return -diff/8
-        
-if __name__ == '__main__':
-     env = CleanupWorld(max_time_steps=1000)
-     obs = env.reset()
-     # obs, rew, done = env.step('right')
-     # obs, rew, done = env.step('forward')
-     # obs, rew, done = env.step('right')
-     # obs, rew, done = env.step('pick')
+        if action == "left":
+            self.world_objects["agent"].set_orientation("left")
+            self.update_render(self.world_objects["agent"])
 
+    def render(self):
+        camTargetPos = [4, 4, 0]
+        cameraUp = [0, -1, 0]
+        pitch = -10.0
+        roll = 0
+        upAxisIndex = 1
+        camDistance = 9
+        pixelWidth = 512
+        pixelHeight = 512
+        nearPlane = 0.01
+        farPlane = 15
+        yaw = 180
+        fov = 60
+        viewMatrix = p.computeViewMatrixFromYawPitchRoll(camTargetPos, camDistance, yaw, pitch,
+                                                            roll, upAxisIndex)
+        aspect = pixelWidth / pixelHeight
+        projectionMatrix = p.computeProjectionMatrixFOV(fov, aspect, nearPlane, farPlane)
+        # viewMatrix = p.computeViewMatrix(cameraEyePosition=[4,4,10],
+                                                # cameraTargetPosition=[4,4,0],
+                                                # cameraUpVector=[0,0,1])
+        img_arr = p.getCameraImage(pixelWidth,
+                                      pixelHeight,
+                                      viewMatrix,
+                                      projectionMatrix,
+                                      shadow=1,
+                                      lightDirection=[-1, -1, -1],
+                                      renderer=p.ER_BULLET_HARDWARE_OPENGL)
+        return img_arr
+if __name__ == "__main__":
+    world = CleanupWorld(render=True)
+    data = []
+    exit = False
+    while (True) and not exit:
+        world.step(world.action_space.sample())
 
-
-     for i in range(1000):
-        #  print(i)
-         action = env.action_space.sample()
-         obs, rew, done,_ = env.step(action)
-         env.render()
-         if done:
-             env.reset()
-         env.difference()
-         print(rew)
-         # cv2.imwrite('env_gif/img_'+str(i).zfill(3)+'.png',obs['observed'])
-         env.render(mode='human')
-         # cv2.imshow('win', obs)
-         cv2.waitKey(100)
