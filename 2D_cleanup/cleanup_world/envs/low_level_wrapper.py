@@ -107,4 +107,7 @@ class PickupWorld(CleanupWorld):
         distance = np.linalg.norm(
             desired_goal_location[0]-achieved_goal_location[0], 1)
         # return distance
-        return 1-distance/(self.map.shape[0]*self.map.shape[1])
+        if distance == 0:
+            return 10
+        else:
+            return 1-distance/(self.map.shape[0]*self.map.shape[1])
