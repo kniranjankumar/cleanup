@@ -24,7 +24,7 @@ p.resetDebugVisualizerCamera( cameraDistance=10, cameraYaw=0,
 cameraPitch=-50, cameraTargetPosition=[4,4,0])
 
 class Object():
-    def __init__(self, world_properties, objectid, properties,facing_direction=0, location=[0,0]):
+    def __init__(self, world_properties, objectid, object_type, properties,facing_direction=0, location=[0,0]):
         self.offset_position=properties['offset_position'] 
         self.offset_orientation=properties['offset_orientation']
         self.scale=properties['scale']
@@ -33,6 +33,7 @@ class Object():
         self.name = properties['name']       
         self.world_properties = world_properties
         self.objectid = objectid
+        self.object_type=object_type
         self.facing_direction = facing_direction
         self.orientation = properties['offset_orientation']
         self.location = location
@@ -176,7 +177,7 @@ class CleanupWorld():
         self.map = np.empty((self.world_size,self.world_size), dtype=object)
         self.world_objects = {}
         self.world_properties = {'scale': 1, 'size': self.world_size}
-        objects_available = ['agent','chair','plate','tv','couch','book','phone','laptop', 'cupboard','coffee_table']
+        self.objects_available = ['empty','agent','chair','plate','tv','couch','book','phone','laptop', 'cupboard','coffee_table']
         # objects_in_world = {'agent':1,'chair':4,'couch':1,'tv':1,'cupboard':1,'coffee_table':1,'laptop':1}
         objects_in_world = {'agent':1}
         # objects_in_world = {}
@@ -194,7 +195,7 @@ class CleanupWorld():
         #                 else:
         #                     objects_in_world[obj_name] += 1    
         keys = {str(p.B3G_RETURN):'return'}
-        for i in range(len(objects_available)-1):
+        for i in range(len(self.objects_available)-2):
             keys[str(i+49)]= objects[i+1]
         object_count = 0
         p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)
@@ -203,6 +204,7 @@ class CleanupWorld():
         loc = self.get_suitable_location(obj_instance['shape'])
         obj = Object(world_properties=self.world_properties, 
             objectid=object_count+1, 
+            object_type='agent',
             location=[loc[0], loc[1]],                 
             properties=obj_instance)
         self.map[loc[0]:loc[0]+obj_instance['shape'][0],loc[1]:loc[1]+obj_instance['shape'][1]] = obj
@@ -243,6 +245,7 @@ class CleanupWorld():
                             if loc is not None:
                                 obj = Object(world_properties=self.world_properties, 
                                     objectid=object_count+1, 
+                                    object_type=obj_name,
                                     location=[loc[0], loc[1]],                 
                                     properties=obj_instance)
                                 self.map[loc[0]:loc[0]+obj_instance['shape'][0],loc[1]:loc[1]+obj_instance['shape'][1]] = obj
@@ -332,9 +335,9 @@ class CleanupWorld():
         int_map = np.zeros([self.map.shape[0],self.map.shape[1],2],dtype='uint8')
         for i in range(self.map.shape[0]):
             for j in range(self.map.shape[1]):
-                int_map[i,j,0] = self.map[i,j].objectid if isinstance(self.map[i,j],Object) else 0
+                int_map[i,j,0] = self.objects_available.index(self.map[i,j].object_type) if isinstance(self.map[i,j],Object) else 0
                 if int_map[i,j,0] != 0:
-                    int_map[i,j,1] = self.map[i,j].get_children([i,j]).objectid if self.map[i,j].has_children([i,j]) else 0
+                    int_map[i,j,1] = self.objects_available.index(self.map[i,j].get_children([i,j]).object_type) if self.map[i,j].has_children([i,j]) else 0
         return int_map
         
     def step(self, action):
