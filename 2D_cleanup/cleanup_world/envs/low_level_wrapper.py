@@ -56,6 +56,8 @@ class PickupWorld(CleanupWorld):
         # print('achived location', achieved_location)
         if achieved_location is not None:
             array[achieved_location[0], achieved_location[1], :] = 1
+        else:
+            array[self.world_objects['agent'].location[0],self.world_objects['agent'].location[1],:] = 1
         return array
 
     @property
@@ -96,6 +98,8 @@ class PickupWorld(CleanupWorld):
         return {'observation': obs.reshape(-1), 'achieved_goal': self.achieved_goal_array.reshape(-1), 'desired_goal': self.desired_goal_array.reshape(-1)}
 
     def compute_reward(self, achieved_goal, desired_goal, info=None):
+        achieved_goal = achieved_goal.reshape(self.map.shape[0],self.map.shape[1],2)[:,:,0]
+        desired_goal = desired_goal.reshape(self.map.shape[0],self.map.shape[1],2)[:,:,0]
         achieved_goal_location = np.argwhere(achieved_goal == 1)
         desired_goal_location = np.argwhere(desired_goal == 1)
         if len(achieved_goal_location) == 0 or len(desired_goal_location) == 0:
@@ -103,4 +107,4 @@ class PickupWorld(CleanupWorld):
         distance = np.linalg.norm(
             desired_goal_location[0]-achieved_goal_location[0], 1)
         # return distance
-        return 2-2*distance/(self.map.shape[0]*self.map.shape[1])
+        return 1-distance/(self.map.shape[0]*self.map.shape[1])
