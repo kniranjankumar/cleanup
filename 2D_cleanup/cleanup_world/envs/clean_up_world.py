@@ -8,6 +8,7 @@ import copy
 import pickle as pkl
 import gym
 from gym.spaces import Dict, Box, Discrete
+from gym.utils import seeding
 path = os.getcwd()
 base_path = path+"/2D_cleanup/cleanup_world/envs"
 
@@ -227,6 +228,8 @@ class CleanupWorld(gym.Env):
         self.obj_dict = {obj["name"]: obj for obj in obj_list}
         self.TIME_LIMIT = max_time_steps
         self.is_render = render
+        self._seed()
+        
         if self.is_render:
             self.init_renderer()
             p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)
@@ -258,7 +261,11 @@ class CleanupWorld(gym.Env):
         #     cameraPitch=-50,
         #     cameraTargetPosition=[4, 4, 0],
         # )
-
+    def _seed(self, seed=None):
+        # print('set_seed', seed)
+        self.np_random, seed = seeding.np_random(seed)
+        return [seed]
+        
     def init_objects(self):
         # TODO initialize the grid with objects1
         pass
@@ -354,7 +361,7 @@ class CleanupWorld(gym.Env):
                          properties=obj_instance,
                          object_type=object_name,
                          render=self.is_render)
-            print(self.num_objects, obj.Uid)
+            # print(self.num_objects, obj.Uid)
             self.map[loc[0]:loc[0]+obj_instance['shape'][0],
                      loc[1]:loc[1]+obj_instance['shape'][1]] = obj
             self.world_objects[obj_instance['name']] = obj
@@ -420,7 +427,7 @@ class CleanupWorld(gym.Env):
 
     def get_observation(self):
         int_map = np.zeros(
-            [self.map.shape[0], self.map.shape[1], 2], dtype="uint8")
+            [self.map.shape[0], self.map.shape[1], 2], dtype="float")
         for i in range(self.map.shape[0]):
             for j in range(self.map.shape[1]):
                 int_map[i, j, 0] = (
@@ -441,17 +448,18 @@ class CleanupWorld(gym.Env):
         self.t += 1
         rew = 0
         action = self.action_space_str[action]
-        print(action)
+        # print(action)
         map_loc = self.world_objects["agent"].location
         if action == "forward" or action == "pick":
+            
             if self.world_objects["agent"].facing_direction == 0:
-                new_loc = map_loc[0], map_loc[1] + 1
+                new_loc = map_loc[0]-1, map_loc[1]
             elif self.world_objects["agent"].facing_direction == 1:
-                new_loc = map_loc[0] - 1, map_loc[1]
+                new_loc = map_loc[0], map_loc[1]-1
             elif self.world_objects["agent"].facing_direction == 2:
-                new_loc = map_loc[0], map_loc[1] - 1
+                new_loc = map_loc[0]+1, map_loc[1]
             elif self.world_objects["agent"].facing_direction == 3:
-                new_loc = map_loc[0] + 1, map_loc[1]
+                new_loc = map_loc[0], map_loc[1]+1
             # print('here', new_loc)
 
             if not (
