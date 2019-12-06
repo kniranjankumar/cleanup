@@ -49,8 +49,32 @@ class PickupCnnPolicyDQN(FeedForwardPolicy_DQN):
     def __init__(self, sess, ob_space, ac_space, n_env, n_steps, n_batch,
                  reuse=False, obs_phs=None, dueling=True, **_kwargs):
         super(PickupCnnPolicyDQN, self).__init__(sess, ob_space, ac_space, n_env, n_steps, n_batch, reuse,
-                                        feature_extraction="mlp", obs_phs=obs_phs, dueling=dueling, cnn_extractor=custom_cnn,
+                                        feature_extraction="cnn", obs_phs=obs_phs, dueling=dueling, cnn_extractor=custom_cnn,
                                         layer_norm=False, **_kwargs)
+
+class PickupMlpPolicyDQN(FeedForwardPolicy_DQN):
+    """
+    Policy object that implements DQN policy, using a CNN (the nature CNN)
+
+    :param sess: (TensorFlow session) The current TensorFlow session
+    :param ob_space: (Gym Space) The observation space of the environment
+    :param ac_space: (Gym Space) The action space of the environment
+    :param n_env: (int) The number of environments to run
+    :param n_steps: (int) The number of steps to run for each environment
+    :param n_batch: (int) The number of batch to run (n_envs * n_steps)
+    :param reuse: (bool) If the policy is reusable or not
+    :param obs_phs: (TensorFlow Tensor, TensorFlow Tensor) a tuple containing an override for observation placeholder
+        and the processed observation placeholder respectivly
+    :param dueling: (bool) if true double the output MLP to compute a baseline for action scores
+    :param _kwargs: (dict) Extra keyword arguments for the nature CNN feature extraction
+    """
+
+    def __init__(self, sess, ob_space, ac_space, n_env, n_steps, n_batch,
+                 reuse=False, obs_phs=None, dueling=True, **_kwargs):
+        super(PickupMlpPolicyDQN, self).__init__(sess, ob_space, ac_space, n_env, n_steps, n_batch, reuse,
+                                        feature_extraction="mlp", obs_phs=obs_phs, dueling=dueling, layers=[128,128,64],
+                                        layer_norm=False, **_kwargs)
+
 class CnnPolicyA2C(FeedForwardPolicy):
     """
     Policy object that implements actor critic, using a CNN (the nature CNN)
@@ -72,7 +96,7 @@ class CnnPolicyA2C(FeedForwardPolicy):
 
 model_types = ['DQN', 'DQN_HER','A2C']
 
-model_type = model_types[2]
+model_type = model_types[1]
 parser = Parser(model_type)
 args = parser.parse()
 if model_type == 'DQN':
@@ -101,7 +125,7 @@ elif model_type == 'DQN_HER':
     id='2DPickup-v1',
     entry_point='cleanup_world.envs:PickupWorld')
     env = gym.make('2DPickup-v1')
-    model = HER(PickupCnnPolicyDQN, 
+    model = HER(PickupMlpPolicyDQN, 
                 env, 
                 DQN, 
                 n_sampled_goal=args.num_sampled_goals, 
