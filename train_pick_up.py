@@ -125,7 +125,10 @@ elif model_type == 'DQN_HER':
                 learning_rate=args.learning_rate)
                 
 elif model_type == 'A2C':
-    env = DummyVecEnv([lambda: gym.make('2DPickup-v0') for i in range(4)])
+    register(
+    id='2DPickup-v1',
+    entry_point='cleanup_world.envs:PickupWorld')
+    env = DummyVecEnv([lambda: gym.make('2DPickup-v1') for i in range(4)])
     model = A2C(CnnPolicyA2C, 
                 env, 
                 verbose=args.verbose,
