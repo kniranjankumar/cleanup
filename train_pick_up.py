@@ -127,7 +127,8 @@ elif model_type == 'DQN_HER':
 elif model_type == 'A2C':
     register(
     id='2DPickup-v1',
-    entry_point='cleanup_world.envs:PickupWorld')
+    entry_point='cleanup_world.envs:PickupWorld',
+    kwargs={'is_goal_env':False})
     env = DummyVecEnv([lambda: gym.make('2DPickup-v1') for i in range(4)])
     model = A2C(CnnPolicyA2C, 
                 env, 
