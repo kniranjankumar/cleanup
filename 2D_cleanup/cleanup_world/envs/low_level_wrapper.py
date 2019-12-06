@@ -16,6 +16,7 @@ class PickupWorld(CleanupWorld):
             low=-1 * np.ones([self.world_size * self.world_size * 2]),
             dtype="float",
         )
+        self.is_goal_env = is_goal_env
         if is_goal_env:
             self.observation_space = Dict(
                 {
@@ -24,7 +25,9 @@ class PickupWorld(CleanupWorld):
                     "desired_goal": vector_box,
                 }
             )
-
+        else:
+            self.observation_space = vector_box
+            
     def reset(self):
         obs = super().reset()
         # TODO select a random object and try to pick it up
@@ -33,7 +36,8 @@ class PickupWorld(CleanupWorld):
         pickable_objects.remove('agent')
         pickable_objects = self.np_random.permutation(pickable_objects)
         self.goal_object = self.world_objects[pickable_objects[0]]
-        return self.get_observation_dict()
+        obs = self.get_observation_dict() if self.is_goal_env else self.get_observation_dict()['observation']
+        return obs
 
     @property
     def goal_location(self):
@@ -91,6 +95,8 @@ class PickupWorld(CleanupWorld):
         obs, rew, done, info = super().step(action)
         obs = self.get_observation_dict()
         rew = self.compute_reward(obs['achieved_goal'], obs['desired_goal'])
+        if not self.is_goal_env:
+            obs = obs['observation'] 
         return obs, rew, done, info
 
     def get_observation_dict(self):

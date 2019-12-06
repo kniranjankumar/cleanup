@@ -72,7 +72,7 @@ class CnnPolicyA2C(FeedForwardPolicy):
 
 model_types = ['DQN', 'DQN_HER','A2C']
 
-model_type = model_types[1]
+model_type = model_types[2]
 parser = Parser(model_type)
 args = parser.parse()
 if model_type == 'DQN':
@@ -127,7 +127,8 @@ elif model_type == 'DQN_HER':
 elif model_type == 'A2C':
     register(
     id='2DPickup-v1',
-    entry_point='cleanup_world.envs:PickupWorld')
+    entry_point='cleanup_world.envs:PickupWorld',
+    kwargs={'is_goal_env':False})
     env = DummyVecEnv([lambda: gym.make('2DPickup-v1') for i in range(4)])
     model = A2C(CnnPolicyA2C, 
                 env, 
