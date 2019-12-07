@@ -72,7 +72,7 @@ class PickupMlpPolicyDQN(FeedForwardPolicy_DQN):
     def __init__(self, sess, ob_space, ac_space, n_env, n_steps, n_batch,
                  reuse=False, obs_phs=None, dueling=True, **_kwargs):
         super(PickupMlpPolicyDQN, self).__init__(sess, ob_space, ac_space, n_env, n_steps, n_batch, reuse,
-                                        feature_extraction="mlp", obs_phs=obs_phs, dueling=dueling, layers=[128,128,64],
+                                        feature_extraction="mlp", obs_phs=obs_phs, dueling=dueling, layers=[512,512,64],
                                         layer_norm=False, **_kwargs)
 
 class CnnPolicyA2C(FeedForwardPolicy):
