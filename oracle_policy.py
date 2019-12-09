@@ -51,9 +51,6 @@ def get_neighbors(observation_matrix, location):
 
 if __name__=="__main__":
 	## transition matrix
-	right = np.array([2,0])
-	left = np.array([1,0])
-	right_right = np.array([2,2,0])
 	T = np.array(([0, [2, 2, 0], [2, 0], [1, 0]],[[2, 2, 0], 0, [1, 0], [2, 0]],[[1, 0], [2, 0], 0, [2, 2, 0]],[[2, 0], [1, 0], [2, 2, 0], 0]))
 
 	## create the gym environment
@@ -85,7 +82,6 @@ if __name__=="__main__":
 	eps = 1
 	done = False
 	rew_list = []
-	print("hi")
 	for i in range(eps):
 
 		## get the observation matrix
@@ -136,6 +132,7 @@ if __name__=="__main__":
 				obs_temp = obs_temp.reshape((8,8,2))
 				observation_matrix = obs_temp[:,:,0]
 				print(observation_matrix)
+			# start = deepcopy(state)
 		
 		while not done:
 			obs,rew,done,_ = env.step(4)
