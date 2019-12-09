@@ -448,18 +448,18 @@ class CleanupWorld(gym.Env):
         self.t += 1
         rew = 0
         action = self.action_space_str[action]
-        # print(action)
+        print(self.world_objects["agent"].facing_direction)
         map_loc = self.world_objects["agent"].location
         if action == "forward" or action == "pick":
             
             if self.world_objects["agent"].facing_direction == 0:
-                new_loc = map_loc[0]-1, map_loc[1]
-            elif self.world_objects["agent"].facing_direction == 1:
-                new_loc = map_loc[0], map_loc[1]-1
-            elif self.world_objects["agent"].facing_direction == 2:
-                new_loc = map_loc[0]+1, map_loc[1]
-            elif self.world_objects["agent"].facing_direction == 3:
                 new_loc = map_loc[0], map_loc[1]+1
+            elif self.world_objects["agent"].facing_direction == 1:
+                new_loc = map_loc[0]-1, map_loc[1]
+            elif self.world_objects["agent"].facing_direction == 2:
+                new_loc = map_loc[0], map_loc[1]-1
+            elif self.world_objects["agent"].facing_direction == 3:
+                new_loc = map_loc[0]+1, map_loc[1]
             # print('here', new_loc)
 
             if not (

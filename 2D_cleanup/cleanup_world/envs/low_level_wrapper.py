@@ -73,10 +73,10 @@ class PickupWorld(CleanupWorld):
     @property
     def agent_neighbors(self):
         x, y = self.world_objects['agent'].location
-        up = x - 1, y
-        down = x + 1, y
-        left = x, y - 1
-        right = x, y + 1
+        up = x, y+1
+        left = x - 1, y
+        down = x, y - 1
+        right = x+1, y 
         neighbors = {"up": up, "down": down, "left": left, "right": right}
         #         [print(v) for k,v in neighbours.items()]
         neighbors = {
