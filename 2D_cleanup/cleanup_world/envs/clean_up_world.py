@@ -368,6 +368,10 @@ class CleanupWorld(gym.Env):
             self.num_objects += 1
         return self.get_observation()
 
+    def get_object_positions(self, obs):
+        obj_indices = np.unique(np.floor(obs))
+        
+        
     def set_state(self, obs):
         for k, v in self.world_objects.items():
             if self.is_render:
@@ -380,9 +384,17 @@ class CleanupWorld(gym.Env):
         self.num_objects = 4
         object_locations = np.nonzero(obs)
         objects = {}
+        big_objects = {k:v for k,v in self.obj_dict.items() if v['shape'][0]!=1 or v['shape'][1]!=1}
+        big_object_indices = [self.objects_available.index(obj['name']) for obj in big_objects.values()]
+        print('big_obj_ind',big_object_indices)
+        for i in range(len(object_locations)):
+            #remove redundant indices that correspond to big objects
+            object_index = obs[object_locations[0][i], object_locations[1][i], 0]
+            object_type = self.objects_available[object_index]
         for i in range(len(object_locations)):
             # Create dict with keys object name to save position and orientation
-            object_type = self.objects_available[obs[object_locations[0][i], object_locations[1][i], 0]]
+            object_index = obs[object_locations[0][i], object_locations[1][i], 0]
+            object_type = self.objects_available[object_index]
             count = 1
             if object_type == 'agent':
                 custom_object_name = object_type
