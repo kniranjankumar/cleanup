@@ -270,21 +270,26 @@ class CleanupWorld(gym.Env):
         # TODO initialize the grid with objects1
         pass
 
-    def get_suitable_location(self, shape):
+    def get_suitable_location(self, shape, return_all=False, array=None):
         # get int map from obj map
-        int_map = np.zeros_like(self.map, dtype="uint8")
+        if array is None:
+            array = copy.deepcopy(self.map)
+        int_map = np.zeros_like(array, dtype="uint8")
         kernel = np.ones(shape, dtype="uint8")
-        for i in range(self.map.shape[0]):
-            for j in range(self.map.shape[1]):
-                int_map[i, j] = 1 if isinstance(self.map[i, j], Object) else 0
+        for i in range(array.shape[0]):
+            for j in range(array.shape[1]):
+                if array.dtype == 'bool':
+                    int_map[i, j] = 1 if array[i, j]  else 0
+                else:
+                    int_map[i, j] = 1 if isinstance(array[i, j], Object)  else 0
         # convolve int_map with kernel
         conv_out = np.zeros(
-            [self.map.shape[0] - kernel.shape[0],
-                self.map.shape[1] - kernel.shape[1]],
+            [array.shape[0] - kernel.shape[0],
+                array.shape[1] - kernel.shape[1]],
             dtype="int",
         )
-        for i in range(self.map.shape[0] - kernel.shape[0]):
-            for j in range(self.map.shape[1] - kernel.shape[1]):
+        for i in range(array.shape[0] - kernel.shape[0]):
+            for j in range(array.shape[1] - kernel.shape[1]):
                 product = (
                     int_map[i: i + kernel.shape[0],
                             j: j + kernel.shape[1]] * kernel
@@ -294,7 +299,10 @@ class CleanupWorld(gym.Env):
         if len(feasable_locations) == 0:
             print("cannot add more objects")
             return None
-        return feasable_locations[self.np_random.randint(0, feasable_locations.shape[0]), :]
+        if return_all:
+            return feasable_locations
+        else:
+            return feasable_locations[self.np_random.randint(0, feasable_locations.shape[0]), :]
 
     def build_the_wall(self):
         colBoxId = p.createCollisionShape(
@@ -368,10 +376,19 @@ class CleanupWorld(gym.Env):
             self.num_objects += 1
         return self.get_observation()
 
-    def get_object_positions(self, obs):
-        obj_indices = np.unique(np.floor(obs))
-        
-        
+    def get_object_positions(self, obs_encoded):
+        obs = np.floor(obs_encoded)
+        obj_indices = np.unique(obs.astype('uint8'))
+        obj_indices = obj_indices[1:]
+        obj_locations = {}
+        for ind in obj_indices:
+            # print('ind', ind)
+            array = (obs!=ind)
+            # print(self.obj_dict)
+            locations = self.get_suitable_location(self.obj_dict[self.objects_available[ind]]['shape'],return_all=True,array=array)
+            obj_locations[self.objects_available[ind]]={'locations':locations, 'orientations':[int(obs_encoded[location[0],location[1]]%1*4) for location in locations], 'type':self.objects_available[ind]}
+        return obj_locations
+
     def set_state(self, obs):
         for k, v in self.world_objects.items():
             if self.is_render:
@@ -382,50 +399,48 @@ class CleanupWorld(gym.Env):
         self.item_on_hand = None
         self.t = 0
         self.num_objects = 4
-        object_locations = np.nonzero(obs)
-        objects = {}
-        big_objects = {k:v for k,v in self.obj_dict.items() if v['shape'][0]!=1 or v['shape'][1]!=1}
-        big_object_indices = [self.objects_available.index(obj['name']) for obj in big_objects.values()]
-        print('big_obj_ind',big_object_indices)
-        for i in range(len(object_locations)):
-            #remove redundant indices that correspond to big objects
-            object_index = obs[object_locations[0][i], object_locations[1][i], 0]
-            object_type = self.objects_available[object_index]
-        for i in range(len(object_locations)):
-            # Create dict with keys object name to save position and orientation
-            object_index = obs[object_locations[0][i], object_locations[1][i], 0]
-            object_type = self.objects_available[object_index]
-            count = 1
-            if object_type == 'agent':
-                custom_object_name = object_type
-            else:
-                custom_object_name = object_type + '_0'
-            while custom_object_name in objects.keys():
-                custom_object_name = custom_object_name[:-1]+str(count)
-            objects[custom_object_name] = {'location':[object_locations[0][i], object_locations[1][i]],
-                                            'type':object_type}
+        objects = self.get_object_positions(obs.reshape(8,8,2)[:,:,0])
         for object_name,object_info in objects.items():
-            obj_instance = copy.deepcopy(self.obj_dict[object_info['type']])
-            count = 1
-            if object_name == 'agent':
-                custom_object_name = object_name
-            else:
-                custom_object_name = object_name + '_0'
-            while custom_object_name in self.world_objects.keys():
-                custom_object_name = custom_object_name[:-1]+str(count)
-            obj_instance['name'] = custom_object_name
-            loc = object_info['location']
-            obj = Object(world_properties=self.world_properties,
+                for i in range(len(object_info['locations'])):
+                    obj_instance = copy.deepcopy(self.obj_dict[object_info['type']])
+                    if object_name == 'agent':
+                        print('agent facing direction',object_info['orientations'][i])
+                        custom_object_name = object_name
+                    else:
+                        custom_object_name = object_name + '_'+str(i)
+                    obj_instance['name'] = custom_object_name
+                    obj = Object(world_properties=self.world_properties,
                          objectid=self.num_objects,
-                         location=[loc[0], loc[1]],
+                         location=[object_info['locations'][i][0],object_info['locations'][i][1]],
                          properties=obj_instance,
                          object_type=object_info['type'],
-                         render=self.is_render)
-            print(self.num_objects, obj.Uid)
-            self.map[loc[0]:loc[0]+obj_instance['shape'][0],
-                     loc[1]:loc[1]+obj_instance['shape'][1]] = obj
-            self.world_objects[obj_instance['name']] = obj
-            self.num_objects += 1
+                         render=self.is_render,
+                         facing_direction=object_info['orientations'][i])
+                    print(self.num_objects, obj.Uid)
+                    self.map[object_info['locations'][i][0]:object_info['locations'][i][0]+obj_instance['shape'][0],
+                            object_info['locations'][i][1]:object_info['locations'][i][1]+obj_instance['shape'][1]] = obj
+                    self.world_objects[obj_instance['name']] = obj
+                    self.num_objects += 1
+            # count = 1
+            # if object_name == 'agent':
+            #     custom_object_name = object_name
+            # else:
+            #     custom_object_name = object_name + '_0'
+            # while custom_object_name in self.world_objects.keys():
+            #     custom_object_name = custom_object_name[:-1]+str(count)
+            # obj_instance['name'] = custom_object_name
+            # loc = object_info['location']
+            # obj = Object(world_properties=self.world_properties,
+            #              objectid=self.num_objects,
+            #              location=[loc[0], loc[1]],
+            #              properties=obj_instance,
+            #              object_type=object_info['type'],
+            #              render=self.is_render)
+            # print(self.num_objects, obj.Uid)
+            # self.map[loc[0]:loc[0]+obj_instance['shape'][0],
+            #          loc[1]:loc[1]+obj_instance['shape'][1]] = obj
+            # self.world_objects[obj_instance['name']] = obj
+            # self.num_objects += 1
         return self.get_observation()
 
     def get_obj_from_id(self, id):
