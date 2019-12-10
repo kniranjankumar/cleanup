@@ -414,6 +414,7 @@ class CleanupWorld(gym.Env):
                      loc[1]:loc[1]+obj_instance['shape'][1]] = obj
             self.world_objects[obj_instance['name']] = obj
             self.num_objects += 1
+        return self.get_observation()
 
     def get_obj_from_id(self, id):
         for k, v in self.objectid.items():

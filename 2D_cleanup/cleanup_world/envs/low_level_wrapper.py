@@ -39,6 +39,17 @@ class PickupWorld(CleanupWorld):
         obs = self.get_observation_dict() if self.is_goal_env else self.get_observation_dict()['observation']
         return obs
 
+    def reset2state(self,state):
+        obs = super().set_state(state)
+        # TODO select a random object and try to pick it up
+        pickable_objects = [
+            k for k, v in self.world_objects.items() if v.is_movable]
+        pickable_objects.remove('agent')
+        pickable_objects = self.np_random.permutation(pickable_objects)
+        self.goal_object = self.world_objects[pickable_objects[0]]
+        obs = self.get_observation_dict() if self.is_goal_env else self.get_observation_dict()['observation']
+        return obs
+
     @property
     def goal_location(self):
         return self.goal_object.location

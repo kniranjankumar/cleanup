@@ -59,7 +59,7 @@ if __name__=="__main__":
 	
 	## load the data from pickle file
 	## need to do this for 6 episodes
-	with open('/home/nithin/Desktop/cleanup/new_cleanup/cleanup/collected_data/subject_1/eps_1.pkl','rb') as f:
+	with open('./collected_data/subject_1/eps_1.pkl','rb') as f:
 		data = pickle.load(f)
 
 	X, Y = return_dataset(deepcopy(data))
