@@ -28,8 +28,8 @@ def return_dataset(data):
 	X_new = []
 
 	for value in data:
-		if value['action'] != 'pick':
-			X_new.append(value['obs'].flatten())
+		if value['generated_actions'] != 'pick':
+			X_new.append(value['generated_states'].flatten())
 			# print(value['obs'][:,:,0])
 			# print(value['action'])
 		else:
@@ -37,7 +37,7 @@ def return_dataset(data):
 			X.append(deepcopy(XX))
 			XXX = np.array(X)
 			# print(XX.shape)
-			robot_loc, robot_orient = get_location_orientation(deepcopy(value['obs'][:,:,0]),1.0)
+			robot_loc, robot_orient = get_location_orientation(deepcopy(value['generated_states'][:,:,0]),1.0)
 			output_matrix = np.zeros((8,8))
 			output_matrix[robot_loc[0]][robot_loc[1]] = 1
 			output_matrix = output_matrix.flatten()

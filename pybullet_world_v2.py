@@ -319,14 +319,23 @@ class CleanupWorld():
 
     def update_render(self, obj):
         obj.put_object_in_grid()
-
+    
     def get_observation(self):
-        int_map = np.zeros([self.map.shape[0],self.map.shape[1],2],dtype='uint8')
+        int_map = np.zeros(
+            [self.map.shape[0], self.map.shape[1], 2], dtype="uint8")
         for i in range(self.map.shape[0]):
             for j in range(self.map.shape[1]):
-                int_map[i,j,0] = self.map[i,j].objectid if isinstance(self.map[i,j],Object) else 0
-                if int_map[i,j,0] != 0:
-                    int_map[i,j,1] = self.map[i,j].get_children([i,j]).objectid if self.map[i,j].has_children([i,j]) else 0
+                int_map[i, j, 0] = (
+                    self.objects_available.index(self.map[i, j].object_type)+self.map[i, j].facing_direction/4 if isinstance(
+                        self.map[i, j], Object) else 0
+                )
+                if int_map[i, j, 0] != 0:
+                    int_map[i, j, 1] = (
+                        self.objects_available.index(
+                            self.map[i, j].get_children([i, j]).object_type)+self.map[i, j].facing_direction/4
+                        if self.map[i, j].has_children([i, j])
+                        else 0
+                    )
         return int_map
         
     def step(self, action):

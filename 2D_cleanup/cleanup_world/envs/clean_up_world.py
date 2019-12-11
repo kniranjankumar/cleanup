@@ -33,7 +33,7 @@ class Object:
         self.world_properties = world_properties
         self.objectid = objectid
         self.object_type = object_type
-        self.facing_direction = facing_direction
+        self.facing_direction = 0
         self.orientation = properties["offset_orientation"]
         self.location = location
         self.children = {}
@@ -54,6 +54,12 @@ class Object:
                 orientation=self.offset_orientation,
                 scale=self.scale,
             )
+            for i in range(facing_direction-1):
+                # print('turn right once')
+                self.set_orientation("right")
+            for i in range(1-facing_direction):
+                    # print('turn right once')
+                self.set_orientation("left")
             self.put_object_in_grid()
 
     def add_children(self, child, loc):
@@ -191,6 +197,11 @@ class Object:
         return loc[0] - self.location[0], loc[1] - self.location[1]
 
     @property
+    def matrix_orientation(self):
+        directions = [0.25,0.0,0.75,0.5]
+        return directions[self.facing_direction]
+
+    @property
     def has_parent(self):
         return not self.parent == None
 
@@ -276,6 +287,7 @@ class CleanupWorld(gym.Env):
             array = copy.deepcopy(self.map)
         int_map = np.zeros_like(array, dtype="uint8")
         kernel = np.ones(shape, dtype="uint8")
+        # print(kernel)
         for i in range(array.shape[0]):
             for j in range(array.shape[1]):
                 if array.dtype == 'bool':
@@ -284,17 +296,20 @@ class CleanupWorld(gym.Env):
                     int_map[i, j] = 1 if isinstance(array[i, j], Object)  else 0
         # convolve int_map with kernel
         conv_out = np.zeros(
-            [array.shape[0] - kernel.shape[0],
-                array.shape[1] - kernel.shape[1]],
+            [array.shape[0] - kernel.shape[0]+1,
+                array.shape[1] - kernel.shape[1]+1],
             dtype="int",
         )
-        for i in range(array.shape[0] - kernel.shape[0]):
-            for j in range(array.shape[1] - kernel.shape[1]):
+        # print(int_map)
+        for i in range(array.shape[0] - kernel.shape[0]+1):
+            for j in range(array.shape[1] - kernel.shape[1]+1):
                 product = (
                     int_map[i: i + kernel.shape[0],
                             j: j + kernel.shape[1]] * kernel
                 )
                 conv_out[i, j] = np.sum(product)
+        # print('conv_out')
+        # print(conv_out)
         feasable_locations = np.argwhere(conv_out == 0)
         if len(feasable_locations) == 0:
             print("cannot add more objects")
@@ -382,8 +397,9 @@ class CleanupWorld(gym.Env):
         obj_indices = obj_indices[1:]
         obj_locations = {}
         for ind in obj_indices:
-            # print('ind', ind)
+            # print('object name', self.objects_available[ind])
             array = (obs!=ind)
+            # print(array)
             # print(self.obj_dict)
             locations = self.get_suitable_location(self.obj_dict[self.objects_available[ind]]['shape'],return_all=True,array=array)
             obj_locations[self.objects_available[ind]]={'locations':locations, 'orientations':[int(obs_encoded[location[0],location[1]]%1*4) for location in locations], 'type':self.objects_available[ind]}
@@ -400,11 +416,12 @@ class CleanupWorld(gym.Env):
         self.t = 0
         self.num_objects = 4
         objects = self.get_object_positions(obs.reshape(8,8,2)[:,:,0])
+        assert 'agent' in objects.keys()
         for object_name,object_info in objects.items():
                 for i in range(len(object_info['locations'])):
                     obj_instance = copy.deepcopy(self.obj_dict[object_info['type']])
                     if object_name == 'agent':
-                        print('agent facing direction',object_info['orientations'][i])
+                        # print('agent facing direction',object_info['orientations'][i])
                         custom_object_name = object_name
                     else:
                         custom_object_name = object_name + '_'+str(i)
@@ -416,7 +433,8 @@ class CleanupWorld(gym.Env):
                          object_type=object_info['type'],
                          render=self.is_render,
                          facing_direction=object_info['orientations'][i])
-                    print(self.num_objects, obj.Uid)
+                    # print('orientations', object_info['orientations'][i])
+                    # print(self.num_objects, obj.Uid)
                     self.map[object_info['locations'][i][0]:object_info['locations'][i][0]+obj_instance['shape'][0],
                             object_info['locations'][i][1]:object_info['locations'][i][1]+obj_instance['shape'][1]] = obj
                     self.world_objects[obj_instance['name']] = obj
@@ -459,13 +477,13 @@ class CleanupWorld(gym.Env):
         for i in range(self.map.shape[0]):
             for j in range(self.map.shape[1]):
                 int_map[i, j, 0] = (
-                    self.objects_available.index(self.map[i, j].object_type)+self.map[i, j].facing_direction/4 if isinstance(
+                    self.objects_available.index(self.map[i, j].object_type)+self.map[i, j].matrix_orientation if isinstance(
                         self.map[i, j], Object) else 0
                 )
                 if int_map[i, j, 0] != 0:
                     int_map[i, j, 1] = (
                         self.objects_available.index(
-                            self.map[i, j].get_children([i, j]).object_type)+self.map[i, j].facing_direction/4
+                            self.map[i, j].get_children([i, j]).object_type)+self.map[i, j].matrix_orientation
                         if self.map[i, j].has_children([i, j])
                         else 0
                     )
@@ -476,7 +494,7 @@ class CleanupWorld(gym.Env):
         self.t += 1
         rew = 0
         action = self.action_space_str[action]
-        print(self.world_objects["agent"].facing_direction)
+        # print(self.world_objects["agent"].facing_direction)
         map_loc = self.world_objects["agent"].location
         if action == "forward" or action == "pick":
             
@@ -509,25 +527,31 @@ class CleanupWorld(gym.Env):
                     if not self.world_objects["agent"].has_children():
                         if isinstance(self.map[new_loc[0], new_loc[1]], Object):
                             # Execute pick action
+                            move = False
                             obj_in_front = self.map[new_loc[0], new_loc[1]]
                             if obj_in_front.has_children(new_loc):
+                                # print('here')
                                 obj_in_front = obj_in_front.remove_children(
                                     new_loc)
+                                move = True
                             else:
                                 if obj_in_front.is_movable:
                                     self.map[new_loc[0], new_loc[1]] = object()
+                                    move = True
                                     # print('adding children')
-                                    self.world_objects["agent"].add_children(
-                                        obj_in_front, self.world_objects["agent"].location
-                                    )
-                                    self.update_render(
-                                        self.world_objects["agent"])
+                            if move:
+                                self.world_objects["agent"].add_children(
+                                    obj_in_front, self.world_objects["agent"].location
+                                )
+                                self.update_render(
+                                    self.world_objects["agent"])
                                     # self.map[new_loc[0], new_loc[1]] = 0
                     else:
                         # Execute place action
                         obj_in_front = self.map[new_loc[0], new_loc[1]]
                         if isinstance(obj_in_front, Object):
                             if not obj_in_front.is_infertile:
+                                # print("keeping on chair")
                                 child = self.world_objects["agent"].remove_children(
                                     self.world_objects["agent"].location
                                 )
@@ -537,14 +561,17 @@ class CleanupWorld(gym.Env):
                                     self.world_objects["agent"].add_children(
                                         child, self.world_objects["agent"].location
                                     )
+                                
+                                child.set_location(new_loc)
+                                self.update_render(child)
                         else:
                             child = self.world_objects["agent"].remove_children(
                                 self.world_objects["agent"].location
                             )
                             self.map[new_loc[0], new_loc[1]] = child
                         # del self.world_objects['agent'].children[child.name]
-                        child.set_location(new_loc)
-                        self.update_render(child)
+                            child.set_location(new_loc)
+                            self.update_render(child)
 
         if action == "right":
             self.world_objects["agent"].set_orientation("right")

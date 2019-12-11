@@ -35,7 +35,9 @@ class PickupWorld(CleanupWorld):
             k for k, v in self.world_objects.items() if v.is_movable]
         pickable_objects.remove('agent')
         pickable_objects = self.np_random.permutation(pickable_objects)
-        self.goal_object = self.world_objects[pickable_objects[0]]
+        #pick random empty block
+        empty_blocks = np.argwhere(obs==0)
+        self.goal_location = empty_blocks[self.np_random.int(len(empty_blocks))]
         obs = self.get_observation_dict() if self.is_goal_env else self.get_observation_dict()['observation']
         return obs
 
@@ -63,6 +65,29 @@ class PickupWorld(CleanupWorld):
         else:
             box_in_front = None
         return box_in_front
+
+    @property
+    def achieved_goal_array(self):
+        array = np.zeros([self.world_size, self.world_size, 2])
+        loc = self.world_objects['agent'].location
+        array[loc[0],loc[1],0] = 1
+        array[loc[0],loc[1],1] = self.world_objects['agent'].matrix_orientation
+    # @property
+    # def achieved_goal_array(self):
+    #     array = np.zeros([self.world_size, self.world_size, 2])
+    #     achieved_location = self.box_in_front
+    #     # print('achived location', achieved_location)
+    #     if achieved_location is not None:
+    #         array[achieved_location[0], achieved_location[1], :] = 1
+    #     else:
+    #         array[self.world_objects['agent'].location[0],self.world_objects['agent'].location[1],:] = 1
+    #     return array
+
+    # @property
+    # def desired_goal_array(self):
+    #     array = np.zeros([self.world_size, self.world_size, 2])
+    #     array[self.goal_location[0], self.goal_location[1], :] = 1
+    #     return array
 
     @property
     def achieved_goal_array(self):
