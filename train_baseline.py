@@ -15,7 +15,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 # %%
-with open('./combined.pkl','rb') as f:
+with open('.clean_data/combined.pkl','rb') as f:
     data = pkl.load(f)
 len(data)
 

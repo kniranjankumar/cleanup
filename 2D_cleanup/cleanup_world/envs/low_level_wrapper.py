@@ -158,7 +158,7 @@ class PickupWorld(CleanupWorld):
     def get_observation_dict(self):
         obs = super().get_observation()
         obs[obs>=2] = 2
-        obs = obs[:,:,0]
+        obs = obs[:,:,0]/2
         return {'observation': obs.reshape(-1), 'achieved_goal': self.achieved_goal_array.reshape(-1), 'desired_goal': self.desired_goal_array.reshape(-1)}
 
     def compute_reward(self, achieved_goal, desired_goal, info=None):
