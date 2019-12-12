@@ -172,10 +172,7 @@ class PickupWorld(CleanupWorld):
         orientation_diff = 1 if orientation_diff == 0.75 else orientation_diff*4
         # return distance
         if distance == 0:
-            if orientation_diff == 0:
-                return 10
-            else:
-                return 5
+                return 10+orientation_diff*2
         else:
             return 1-distance/(self.map.shape[0]*self.map.shape[1])
 
