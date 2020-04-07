@@ -13,7 +13,7 @@ p.setPhysicsEngineParameter(numSolverIterations=10)
 p.setTimeStep(1. / 120.)
 # logId = p.startStateLogging(p.STATE_LOGGING_PROFILE_TIMINGS, "visualShapeBench.json")
 # useMaximalCoordinates is much faster then the default reduced coordinates (Featherstone)
-p.loadURDF("plane.urdf", useMaximalCoordinates=True,
+p.loadURDF("./data/plane/plane.urdf", useMaximalCoordinates=True,
            basePosition=[0.5, 0.5, 0])
 # disable rendering during creation.
 p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
