@@ -67,6 +67,7 @@ class NumpyWorld(gym.Env):
         self.hand = 0
         self.world_state = self.generate_random_layout()
         self.goal_state = self.generate_random_layout()
+        return self.get_obs()
         
     def generate_random_layout(self):
         state =  np.zeros(self.world_size)
