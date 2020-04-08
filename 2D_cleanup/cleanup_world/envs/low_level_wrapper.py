@@ -158,7 +158,7 @@ class PickupWorld(CleanupWorld):
     def get_observation_dict(self):
         obs = super().get_observation()
         obs[obs>=2] = 2
-        obs = obs[:,:,0]
+        obs = obs[:,:,0]/2
         return {'observation': obs.reshape(-1), 'achieved_goal': self.achieved_goal_array.reshape(-1), 'desired_goal': self.desired_goal_array.reshape(-1)}
 
     def compute_reward(self, achieved_goal, desired_goal, info=None):
@@ -172,10 +172,7 @@ class PickupWorld(CleanupWorld):
         orientation_diff = 1 if orientation_diff == 0.75 else orientation_diff*4
         # return distance
         if distance == 0:
-            if orientation_diff == 0:
-                return 10
-            else:
-                return 5
+                return 10+orientation_diff*2
         else:
             return 1-distance/(self.map.shape[0]*self.map.shape[1])
 
