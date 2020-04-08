@@ -53,9 +53,9 @@ class NumpyWorld(gym.Env):
         self.num_objects = num_objects
         self.action_space = Discrete(self.world_size[0]*self.world_size[1])
         self.observation_space = Dict(
-            {'observation': Box(high=num_objects * np.ones(self.world_size), low=np.zeros(self.world_size), dtype='uint8'),
-             'achieved_goal': Box(high=num_objects*np.ones(self.world_size) , low=np.zeros(self.world_size), dtype='uint8'),
-             'desired_goal': Box(high=num_objects*np.ones(self.world_size) , low=np.zeros(self.world_size), dtype='uint8')})
+            {'observation': Box(high=num_objects * np.ones(self.world_size)[:], low=np.zeros(self.world_size)[:], dtype='uint8'),
+             'achieved_goal': Box(high=num_objects*np.ones(self.world_size)[:] , low=np.zeros(self.world_size)[:], dtype='uint8'),
+             'desired_goal': Box(high=num_objects*np.ones(self.world_size)[:] , low=np.zeros(self.world_size)[:], dtype='uint8')})
         self.world_state = np.zeros(self.world_size)
         self.goal_state = np.zeros(self.world_size)
         self.max_time_steps = max_time_steps
@@ -105,7 +105,7 @@ class NumpyWorld(gym.Env):
         return -distance
         
     def get_obs(self):
-        return {'observation':self.world_state, 'achieved_goal':self.world_state, 'desired_goal':self.goal_state}
+        return {'observation':self.world_state[:], 'achieved_goal':self.world_state[:], 'desired_goal':self.goal_state[:]}
         
     def render(self):
         obs = self.get_obs()
