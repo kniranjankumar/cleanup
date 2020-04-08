@@ -126,7 +126,7 @@ if __name__ == "__main__":
             goal_selection_strategy=args.goal_selection_strategy,
             verbose=args.verbose, 
             exploration_fraction=args.exploration_fraction,                 
-            tensorboard_log='/srv/share/nkannabiran3/DQN/HER',
+            tensorboard_log='/srv/share/nkannabiran3/numpy_world/DQN_HER',
             double_q=args.double_q,
             gamma=args.gamma,
             exploration_final_eps=args.exploration_final_eps,
