@@ -48,7 +48,7 @@ class PickupMlpPolicyDQN(FeedForwardPolicy_DQN):
                                         layer_norm=False, **_kwargs)
                                         
 class NumpyWorld(gym.Env):
-    def __init__(self, world_size=[8,8], num_objects=2, max_time_steps=2):
+    def __init__(self, world_size=[8,8], num_objects=2, max_time_steps=5):
         self.world_size = world_size
         self.num_objects = num_objects
         self.action_space = Discrete(self.world_size[0]*self.world_size[1])
