@@ -106,7 +106,7 @@ class NumpyWorld(gym.Env):
         return -distance
         
     def get_obs(self):
-        return {'observation':self.world_state[-1], 'achieved_goal':self.world_state[-1], 'desired_goal':self.goal_state[-1]}
+        return {'observation':self.world_state.reshape(-1), 'achieved_goal':self.world_state.reshape(-1), 'desired_goal':self.goal_state.reshape(-1)}
         
     def render(self):
         obs = self.get_obs()
