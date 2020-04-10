@@ -91,7 +91,7 @@ class NumpyWorld(gym.Env):
         else:
             done = True
         obs = self.get_obs()
-        rew = self.compute_reward(obs['achieved_goal'],obs['desired_goal'], None)
+        rew = self.compute_reward(obs['achieved_goal'].reshape(self.world_size),obs['desired_goal'].reshape(self.world_size), None)
         return obs, rew, done, {}
         
     def compute_reward(self, achieved_goal, desired_goal, info):
