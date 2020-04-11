@@ -57,6 +57,8 @@ class NumpyWorld(gym.Env):
              'achieved_goal': Box(high=num_objects * np.ones(self.world_size).reshape(-1), low=np.zeros(self.world_size).reshape(-1), dtype='uint8'),
              'desired_goal': Box(high=num_objects * np.ones(self.world_size).reshape(-1), low=np.zeros(self.world_size).reshape(-1), dtype='uint8')})
         self.world_state = np.zeros(self.world_size)
+        self.world_state_init = self.generate_random_layout()
+        
         self.goal_state = np.zeros(self.world_size)
         self.max_time_steps = max_time_steps
         self.time_step = 0
@@ -65,7 +67,8 @@ class NumpyWorld(gym.Env):
     def reset(self):
         self.time_step = 0
         self.hand = 0
-        self.world_state = self.generate_random_layout()
+        self.world_state = self.world_state_init
+        # self.world_state = self.generate_random_layout()
         self.goal_state = self.generate_random_layout()
         return self.get_obs()
         
