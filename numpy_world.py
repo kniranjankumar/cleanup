@@ -95,18 +95,18 @@ class NumpyWorld(gym.Env):
         else:
             done = True
         obs = self.get_obs()
-        rew = self.compute_reward(obs['desired_goal'].reshape(self.world_size),obs['achieved_goal'].reshape(self.world_size), None)
+        rew = self.compute_reward(obs['desired_goal'],obs['achieved_goal'], None)
         return obs, rew, done, {}
         
     def compute_reward(self, desired_goal, achieved_goal, info):
         distance = 0
-        achieved_goal += 1
-        desired_goal += 1
+        achieved_goal = achieved_goal.reshape(self.world_size)+1
+        desired_goal = desired_goal.reshape(self.world_size)+1
         for i in range(self.num_objects):
             obj_desired = np.argwhere(desired_goal==i+1)
             obj_achieved = np.argwhere(achieved_goal==i+1)
             if len(obj_desired) != 0 and len(obj_achieved) != 0:
-                print(obj_achieved, obj_desired)
+                # print(obj_achieved, obj_desired)
                 distance += np.linalg.norm(obj_desired - obj_achieved)
             else:
                 distance +=self.world_size[0]
