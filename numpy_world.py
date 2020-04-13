@@ -44,7 +44,7 @@ class PickupMlpPolicyDQN(FeedForwardPolicy_DQN):
     def __init__(self, sess, ob_space, ac_space, n_env, n_steps, n_batch,
                  reuse=False, obs_phs=None, dueling=True, **_kwargs):
         super(PickupMlpPolicyDQN, self).__init__(sess, ob_space, ac_space, n_env, n_steps, n_batch, reuse,
-                                        feature_extraction="mlp", obs_phs=obs_phs, dueling=dueling, layers=[512,512,128,64],
+                                        feature_extraction="mlp", obs_phs=obs_phs, dueling=dueling, layers=[512,128,64],
                                         layer_norm=False, **_kwargs)
                                         
 class NumpyWorld(gym.Env):
@@ -110,7 +110,7 @@ class NumpyWorld(gym.Env):
         return -distance
         
     def get_obs(self):
-        return {'observation':self.world_state.reshape(-1), 'achieved_goal':self.world_state.reshape(-1), 'desired_goal':self.goal_state.reshape(-1)}
+        return {'observation':self.world_state.reshape(-1)-1, 'achieved_goal':self.world_state.reshape(-1)-1, 'desired_goal':self.goal_state.reshape(-1)-1}
         
     def render(self):
         obs = self.get_obs()
