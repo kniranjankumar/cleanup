@@ -100,6 +100,8 @@ class NumpyWorld(gym.Env):
         
     def compute_reward(self, achieved_goal, desired_goal, info):
         distance = 0
+        achieved_goal += 1
+        desired_goal += 1
         for i in range(self.num_objects):
             obj_desired = np.argwhere(desired_goal==i+1)
             obj_achieved = np.argwhere(achieved_goal==i+1)
