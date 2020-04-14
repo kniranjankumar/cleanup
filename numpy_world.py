@@ -106,7 +106,7 @@ class NumpyWorld(gym.Env):
             obj_desired = np.argwhere(desired_goal==i+1)
             obj_achieved = np.argwhere(achieved_goal==i+1)
             if len(obj_desired) != 0 and len(obj_achieved) != 0:
-                print(obj_achieved, obj_desired)
+                # print(obj_achieved, obj_desired)
                 distance += np.linalg.norm(obj_desired - obj_achieved)
             else:
                 distance +=self.world_size[0]
