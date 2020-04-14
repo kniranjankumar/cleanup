@@ -58,7 +58,7 @@ class NumpyWorld(gym.Env):
              'desired_goal': Box(high=num_objects * np.ones(self.world_size).reshape(-1), low=np.zeros(self.world_size).reshape(-1), dtype='uint8')})
 
         self.world_state = np.zeros(self.world_size)
-        self.world_state_init = self.generate_random_layout()
+        self.world_state_goal = self.generate_random_layout()
         
         self.goal_state = np.zeros(self.world_size)
         self.max_time_steps = max_time_steps
@@ -68,10 +68,10 @@ class NumpyWorld(gym.Env):
     def reset(self):
         self.time_step = 0
         self.hand = 0
-        self.world_state = self.world_state_init
+        self.world_state = self.generate_random_layout()
         # self.world_state = self.generate_random_layout()
-        self.goal_state = self.generate_random_layout()
-        return self.get_obs()
+        self.goal_state = self.world_state_goal
+        return self.get_obs()['observation']
         
     def generate_random_layout(self):
         state =  np.zeros(self.world_size)
@@ -96,7 +96,7 @@ class NumpyWorld(gym.Env):
             done = True
         obs = self.get_obs()
         rew = self.compute_reward(obs['desired_goal'],obs['achieved_goal'], None)
-        return obs, rew, done, {}
+        return obs['observation'], rew, done, {}
         
     def compute_reward(self, desired_goal, achieved_goal, info):
         distance = 0
@@ -106,7 +106,7 @@ class NumpyWorld(gym.Env):
             obj_desired = np.argwhere(desired_goal==i+1)
             obj_achieved = np.argwhere(achieved_goal==i+1)
             if len(obj_desired) != 0 and len(obj_achieved) != 0:
-                # print(obj_achieved, obj_desired)
+                print(obj_achieved, obj_desired)
                 distance += np.linalg.norm(obj_desired - obj_achieved)
             else:
                 distance +=self.world_size[0]
@@ -127,14 +127,32 @@ if __name__ == "__main__":
     env = gym.make('2DNumpyWorld-v1')
     parser = Parser('DQN_HER')
     args = parser.parse()
-    model = HER(PickupMlpPolicyDQN, 
+    # model = HER(PickupMlpPolicyDQN, 
+    #         env, 
+    #         DQN, 
+    #         n_sampled_goal=args.num_sampled_goals, 
+    #         goal_selection_strategy=args.goal_selection_strategy,
+    #         verbose=args.verbose, 
+    #         exploration_fraction=args.exploration_fraction,                 
+    #         tensorboard_log='/srv/share/nkannabiran3/numpy_world/DQN_HER',
+    #         double_q=args.double_q,
+    #         gamma=args.gamma,
+    #         exploration_final_eps=args.exploration_final_eps,
+    #         train_freq=args.train_freq,
+    #         batch_size=args.batch_size,
+    #         learning_starts=args.learning_starts,
+    #         target_network_update_freq=args.target_network_update_freq,
+    #         prioritized_replay=args.prioritized_replay,
+    #         prioritized_replay_alpha=args.prioritized_replay_alpha,
+    #         prioritized_replay_beta0=args.prioritized_replay_beta0,
+    #         prioritized_replay_beta_iters=args.prioritized_replay_beta_iters,
+    #         prioritized_replay_eps=args.prioritized_replay_eps,
+    #         param_noise=args.param_noise,
+    #         learning_rate=args.learning_rate)
+    model = DQN(PickupMlpPolicyDQN, 
             env, 
-            DQN, 
-            n_sampled_goal=args.num_sampled_goals, 
-            goal_selection_strategy=args.goal_selection_strategy,
-            verbose=args.verbose, 
-            exploration_fraction=args.exploration_fraction,                 
-            tensorboard_log='/srv/share/nkannabiran3/numpy_world/DQN_HER',
+            verbose=args.verbose,
+            tensorboard_log='/srv/share/nkannabiran3/DQN/',
             double_q=args.double_q,
             gamma=args.gamma,
             exploration_final_eps=args.exploration_final_eps,
