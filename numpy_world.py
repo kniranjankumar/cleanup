@@ -152,7 +152,7 @@ if __name__ == "__main__":
     model = DQN(PickupMlpPolicyDQN, 
             env, 
             verbose=args.verbose,
-            tensorboard_log='/srv/share/nkannabiran3/DQN/',
+            tensorboard_log='/srv/share/nkannabiran3/numpy_world/DQN/',
             double_q=args.double_q,
             gamma=args.gamma,
             exploration_final_eps=args.exploration_final_eps,
